@@ -13,5 +13,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Copiar el código
 COPY app /app
+COPY scripts /app/scripts
+COPY databases /app/databases
 
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info"]

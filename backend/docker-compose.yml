@@ -1,14 +1,14 @@
 version: '3.9'
 services:
   api:
-    build: 
-      context: ./backend
+    build:
+      context: .
       dockerfile: Dockerfile
     image: petverse_api:latest
     container_name: petverse_api
-    restart: unless-stopped 
+    restart: unless-stopped
     ports:
-      - "8000:8000" 
+      - "8000:8000"
     depends_on:
       - db
     networks:
@@ -25,19 +25,13 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
-      - pgdata:/data/postgres
+      - pgdata:/var/lib/postgresql/data
+      - ./databases/00-schema-tables.sql:/docker-entrypoint-initdb.d/00-schema-tables.sql:ro
     ports:
       - "5432:5432"
     networks:
       - petverse_net
-    command: ["postgres", "-c", "shared_preload_libraries=pgvector"]
-
-  pgvector:
-    image: ankane/pgvector:latest
-    container_name: petverse_pgvector
-    restart: unless-stopped
-    networks:
-      - petverse_net
+    command: ["postgres"]
 
 networks:
   petverse_net:
