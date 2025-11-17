@@ -5,6 +5,9 @@ import asyncio
 
 from src.routers.health import router as health_router
 from src.db import test_connection, wait_for_db
+from src.routers.auth import router as auth_router
+from src.routers.users import router as users_router
+from src.routers.pets import router as pets_router
 
 def create_app() -> FastAPI:
     app = FastAPI(title="PetVerse API")
@@ -23,6 +26,10 @@ def create_app() -> FastAPI:
 
     # Routers
     app.include_router(health_router)
+    # Authentication routes (Google OAuth callback, JWT issuance)
+    app.include_router(auth_router, prefix="/auth")
+    app.include_router(users_router)
+    app.include_router(pets_router)
 
     @app.on_event("startup")
     async def startup_event():
