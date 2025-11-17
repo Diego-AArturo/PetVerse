@@ -1,29 +1,38 @@
-from sqlalchemy import create_engine, MetaData
+from dotenv import load_dotenv
+import os
+import time
+from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
-import os
-from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@db:5432/petverse")
+DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:postgres@db:5432/petverse")
 
-# Normalize URL to prefer psycopg (psycopg v3) when no driver is specified.
-if DATABASE_URL.startswith("postgresql://") and "+" not in DATABASE_URL.split("://", 1)[1]:
-    # convert postgresql://user@host/db -> postgresql+psycopg://user@host/db
-    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+# Normalizar para usar psycopg2 (driver ya instalado en tu venv)
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
 
-# SQLAlchemy Engine
 engine: Engine = create_engine(DATABASE_URL, future=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
-metadata = MetaData()
 
 
-def test_connection() -> bool:
+def test_connection(timeout_seconds: float = 2.0) -> bool:
     try:
         with engine.connect() as conn:
-            conn.execute("SELECT 1")
+            conn.execute(text("SELECT 1"))
         return True
     except SQLAlchemyError:
         return False
+
+
+def wait_for_db(retries: int = 10, delay: float = 1.0) -> bool:
+    for attempt in range(1, retries + 1):
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+            return True
+        except Exception:
+            time.sleep(delay)
+    return False
