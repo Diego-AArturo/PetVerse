@@ -1,0 +1,42 @@
+version: '3.9'
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: petverse_api:latest
+    container_name: petverse_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - petverse_net
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/petverse
+
+  db:
+    image: postgres:16
+    container_name: petverse_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: petverse
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./databases/00-schema-tables.sql:/docker-entrypoint-initdb.d/00-schema-tables.sql:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - petverse_net
+    command: ["postgres"]
+
+networks:
+  petverse_net:
+    name: petverse_net
+
+volumes:
+  pgdata:
+    driver: local
