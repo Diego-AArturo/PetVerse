@@ -1,5 +1,12 @@
+import { HeaderShownContext, HeaderTitle } from "@react-navigation/elements";
 import { Stack } from "expo-router";
 
 export default function RootLayout() {
-  return <Stack />;
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false, //  OCULTA TODO EL HEADER
+      }}
+    />
+  );
 }

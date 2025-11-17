@@ -1,5 +1,5 @@
-import React from "react";
-import { Link, useRouter } from "expo-router";
+import React, { useState } from "react";
+import { useRouter } from "expo-router";
 import {
   StyleSheet,
   Text,
@@ -8,14 +8,16 @@ import {
   TouchableOpacity,
   Pressable,
   ScrollView,
+  Image,
   SafeAreaView,
   Platform,
   KeyboardAvoidingView,
-  Image
 } from "react-native";
 
-export default function Index() {
+export default function Register() {
   const router = useRouter();
+  const [showPass, setShowPass] = useState(false);
+
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
@@ -27,13 +29,23 @@ export default function Index() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.logoContainer}>
-            <Image source={require('../assets/images/logo_petverse.png')} style={styles.logoImage} />
+            <Image source={require('../assets/images/logo_blanco.png')} style={styles.logoImage} />
           </View>
 
           <Text style={styles.title}>PetVerse</Text>
-          <Text style={styles.subtitle}>Inicia sesión para continuar</Text>
+          <Text style={styles.subtitle}>Crea tu cuenta para empezar</Text>
 
           <View style={styles.form}>
+            <View style={styles.inputRow}>
+              <Text style={styles.inputIcon}>👤</Text>
+              <TextInput
+                placeholder="Nombre de usuario"
+                placeholderTextColor="#bfb7e6"
+                style={styles.textInput}
+                autoCapitalize="none"
+              />
+            </View>
+
             <View style={styles.inputRow}>
               <Text style={styles.inputIcon}>✉️</Text>
               <TextInput
@@ -51,15 +63,15 @@ export default function Index() {
                 placeholder="Contraseña"
                 placeholderTextColor="#bfb7e6"
                 style={styles.textInput}
-                secureTextEntry
+                secureTextEntry={!showPass}
               />
-              <Pressable style={styles.eyeButton}>
-                <Text style={styles.eye}>👁️</Text>
+              <Pressable style={styles.eyeButton} onPress={() => setShowPass((v) => !v)}>
+                <Text style={styles.eye}>{showPass ? "🙈" : "👁️"}</Text>
               </Pressable>
             </View>
 
             <TouchableOpacity style={styles.primaryButton} activeOpacity={0.9}>
-              <Text style={styles.primaryButtonText}>Iniciar Sesión</Text>
+              <Text style={styles.primaryButtonText}>Registrarse</Text>
             </TouchableOpacity>
 
             <View style={styles.orRow}>
@@ -73,9 +85,9 @@ export default function Index() {
             </TouchableOpacity>
 
             <View style={styles.registerRow}>
-              <Text style={styles.smallText}>¿No tienes cuenta? </Text>
-              <Pressable onPress={() => router.push("/register" as any)}>
-                <Text style={styles.registerLink}>Regístrate</Text>
+              <Text style={styles.smallText}>¿Ya tienes cuenta? </Text>
+              <Pressable onPress={() => router.push("/" as any)}>
+                <Text style={styles.registerLink}>Iniciar sesión</Text>
               </Pressable>
             </View>
           </View>
