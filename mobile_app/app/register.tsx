@@ -18,6 +18,7 @@ export default function Register() {
   const router = useRouter();
   const [showPass, setShowPass] = useState(false);
 
+
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
@@ -29,7 +30,8 @@ export default function Register() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.logoContainer}>
-            <Image source={require('../assets/images/logo_blanco.png')} style={styles.logoImage} />
+            <Image source={require('../assets/images/logo_blanco.png')} 
+            style={styles.logoImage} />
           </View>
 
           <Text style={styles.title}>PetVerse</Text>
@@ -119,7 +121,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 20,
   },
-  logoImage: { width: 84, height: 84, resizeMode: "contain" },
+  logoImage: { width: 160, height: 160, resizeMode: "contain" },
   logoEmoji: { fontSize: 44 },
   title: {
     color: COLORS.textLight,
@@ -149,7 +151,7 @@ const styles = StyleSheet.create({
   primaryButton: {
     height: 52,
     borderRadius: 12,
-    backgroundColor: COLORS.primary,
+    backgroundColor: "#3a2a60",
     alignItems: "center",
     justifyContent: "center",
     marginTop: 6,
