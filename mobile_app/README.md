@@ -48,3 +48,6 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+SH1 Android
+2C:62:2C:4F:86:98:56:90:0F:06:2D:E8:26:F6:5A:F4:28:C1:D8:6A

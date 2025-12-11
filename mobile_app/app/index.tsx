@@ -1,5 +1,7 @@
 import React from "react";
 import { Link, useRouter } from "expo-router";
+import * as Google from "expo-auth-session/providers/google";
+
 import {
   StyleSheet,
   Text,
@@ -14,8 +16,29 @@ import {
   Image
 } from "react-native";
 
+
+
 export default function Index() {
   const router = useRouter();
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId: "738459768384-7p0kiash0oaolbrb8o5npjiubae8qdjn.apps.googleusercontent.com",
+    iosClientId: "738459768384-pn476o3gbviv3ufvco52ifqvtnh8758i.apps.googleusercontent.com",
+});
+
+   // Manejar respuesta de Google
+React.useEffect(() => {
+  if (response?.type === "success") {
+    const { authentication } = response;
+
+    if (!authentication) return; // ⬅️ Evita el error TS
+
+    console.log("TOKEN GOOGLE:", authentication.accessToken);
+    alert("Login exitoso");
+  }
+}, [response]);
+
+
+
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
@@ -27,7 +50,7 @@ export default function Index() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.logoContainer}>
-            <Image source={require('../assets/images/logo_petverse.png')} style={styles.logoImage} />
+            <Image source={require('../assets/images/logo_blanco.png')} style={styles.logoImage} />
           </View>
 
           <Text style={styles.title}>PetVerse</Text>
@@ -68,7 +91,9 @@ export default function Index() {
               <View style={styles.line} />
             </View>
 
-            <TouchableOpacity style={styles.googleButton} activeOpacity={0.9}>
+            <TouchableOpacity style={styles.googleButton} activeOpacity={0.9}
+            onPress={() => {console.log("Navegando a /loginWithGoogle" as any);
+            promptAsync()}}>
               <Text style={styles.googleText}>G  Google</Text>
             </TouchableOpacity>
 
@@ -107,7 +132,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 20,
   },
-  logoImage: { width: 84, height: 84, resizeMode: "contain" },
+  logoImage: { width: 160, height: 160, resizeMode: "contain" },
   logoEmoji: { fontSize: 44 },
   title: {
     color: COLORS.textLight,
@@ -137,7 +162,7 @@ const styles = StyleSheet.create({
   primaryButton: {
     height: 52,
     borderRadius: 12,
-    backgroundColor: COLORS.primary,
+    backgroundColor: "#3a2a60",
     alignItems: "center",
     justifyContent: "center",
     marginTop: 6,
@@ -166,3 +191,4 @@ const styles = StyleSheet.create({
   smallText: { color: COLORS.muted },
   registerLink: { color: COLORS.primary, fontWeight: "700" },
 });
+
