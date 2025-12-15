@@ -1,5 +1,5 @@
-import React from "react";
-import { Link, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "expo-router";
 import * as Google from "expo-auth-session/providers/google";
 import Constants, { ExecutionEnvironment } from "expo-constants";
 
@@ -14,8 +14,11 @@ import {
   SafeAreaView,
   Platform,
   KeyboardAvoidingView,
-  Image
+  Image,
+  ActivityIndicator,
 } from "react-native";
+
+import { loginWithEmail, loginWithGoogleIdToken } from "./data/authService";
 
 
 
@@ -40,24 +43,77 @@ export default function Index() {
       : {}),
   };
   const [request, response, promptAsync] = Google.useAuthRequest(googleConfig);
-//   const [request, response, promptAsync] = Google.useAuthRequest({
-//     androidClientId: "738459768384-7p0kiash0oaolbrb8o5npjiubae8qdjn.apps.googleusercontent.com",
-//     iosClientId: "738459768384-pn476o3gbviv3ufvco52ifqvtnh8758i.apps.googleusercontent.com",
-//     clientId: "738459768384-rnm8kjf2p1mbuajh34kshjbj2hbg0ked.apps.googleusercontent.com",
-// });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-   // Manejar respuesta de Google
-React.useEffect(() => {
-  if (response?.type === "success") {
-    const { authentication } = response;
+  React.useEffect(() => {
+    const handleGoogleResponse = async () => {
+      if (!response) {
+        return;
+      }
+      if (response.type !== "success") {
+        if (response.type === "error") {
+          setErrorMessage("No se pudo completar el login con Google");
+        }
+        setIsSubmitting(false);
+        return;
+      }
+      const idToken =
+        response.authentication?.idToken ??
+        (response.params?.id_token as string | undefined);
+      if (!idToken) {
+        setErrorMessage("Google no entregó un token válido");
+        setIsSubmitting(false);
+        return;
+      }
+      try {
+        await loginWithGoogleIdToken(idToken);
+        router.push("/onboarding" as any);
+      } catch (err) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Error al intercambiar el token con el backend";
+        setErrorMessage(message);
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+    handleGoogleResponse();
+  }, [response, router]);
 
-    if (!authentication) return; // ⬅️ Evita el error TS
+  const handleEmailLogin = async () => {
+    if (!email.trim() || !password) {
+      setErrorMessage("Completa tu correo y contraseña");
+      return;
+    }
+    try {
+      setIsSubmitting(true);
+      setErrorMessage(null);
+      await loginWithEmail({ email: email.trim(), password });
+      router.push("/onboarding" as any);
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "No se pudo iniciar sesión. Inténtalo más tarde.";
+      setErrorMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-    console.log("TOKEN GOOGLE:", authentication.accessToken);
-    alert("Login exitoso");
-  }
-}, [response]);
-
+  const handleGoogleLogin = () => {
+    setErrorMessage(null);
+    setIsSubmitting(true);
+    promptAsync().catch(() => {
+      setIsSubmitting(false);
+      setErrorMessage("No se pudo abrir Google");
+    });
+  };
 
 
   return (
@@ -86,6 +142,8 @@ React.useEffect(() => {
                 style={styles.textInput}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
               />
             </View>
 
@@ -95,15 +153,36 @@ React.useEffect(() => {
                 placeholder="Contraseña"
                 placeholderTextColor="#bfb7e6"
                 style={styles.textInput}
-                secureTextEntry
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
               />
-              <Pressable style={styles.eyeButton}>
-                <Text style={styles.eye}>👁️</Text>
+              <Pressable
+                style={styles.eyeButton}
+                onPress={() => setShowPassword((prev) => !prev)}
+              >
+                <Text style={styles.eye}>{showPassword ? "🙈" : "👁️"}</Text>
               </Pressable>
             </View>
 
-            <TouchableOpacity style={styles.primaryButton} activeOpacity={0.9}>
-              <Text style={styles.primaryButtonText}>Iniciar Sesión</Text>
+            {errorMessage && (
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            )}
+
+            <TouchableOpacity
+              style={[
+                styles.primaryButton,
+                isSubmitting && { opacity: 0.7 },
+              ]}
+              activeOpacity={0.9}
+              onPress={handleEmailLogin}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.primaryButtonText}>Iniciar Sesión</Text>
+              )}
             </TouchableOpacity>
 
             <View style={styles.orRow}>
@@ -112,9 +191,15 @@ React.useEffect(() => {
               <View style={styles.line} />
             </View>
 
-            <TouchableOpacity style={styles.googleButton} activeOpacity={0.9}
-            onPress={() => {console.log("Navegando a /loginWithGoogle" as any);
-            promptAsync()}}>
+            <TouchableOpacity
+              style={[
+                styles.googleButton,
+                (!request || isSubmitting) && { opacity: 0.6 },
+              ]}
+              activeOpacity={0.9}
+              onPress={handleGoogleLogin}
+              disabled={!request || isSubmitting}
+            >
               <Text style={styles.googleText}>G  Google</Text>
             </TouchableOpacity>
 
@@ -211,5 +296,9 @@ const styles = StyleSheet.create({
   },
   smallText: { color: COLORS.muted },
   registerLink: { color: COLORS.primary, fontWeight: "700" },
+  errorText: {
+    color: "#ffb4b4",
+    textAlign: "center",
+    marginBottom: 8,
+  },
 });
-
