@@ -2,6 +2,7 @@
   "expo": {
     "name": "mobile_app",
     "slug": "mobile_app",
+    "owner": "diegv",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -40,7 +41,9 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

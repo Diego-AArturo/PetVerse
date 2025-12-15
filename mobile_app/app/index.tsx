@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useRouter } from "expo-router";
 import * as Google from "expo-auth-session/providers/google";
+import Constants, { ExecutionEnvironment } from "expo-constants";
 
 import {
   StyleSheet,
@@ -20,10 +21,30 @@ import {
 
 export default function Index() {
   const router = useRouter();
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: "738459768384-7p0kiash0oaolbrb8o5npjiubae8qdjn.apps.googleusercontent.com",
-    iosClientId: "738459768384-pn476o3gbviv3ufvco52ifqvtnh8758i.apps.googleusercontent.com",
-});
+  const expoProxyClientId =
+    "738459768384-rnm8kjf2p1mbuajh34kshjbj2hbg0ked.apps.googleusercontent.com"; // el ID del cliente web que tiene https://auth.expo.io/@diegv/mobile_app
+  const isExpoGo =
+    Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+
+  const googleConfig: Partial<Google.GoogleAuthRequestConfig> = {
+    clientId: expoProxyClientId,
+    webClientId: expoProxyClientId,
+    androidClientId: isExpoGo
+      ? undefined
+      : "738459768384-7p0kiash0oaolbrb8o5npjiubae8qdjn.apps.googleusercontent.com",
+    iosClientId: isExpoGo
+      ? undefined
+      : "738459768384-pn476o3gbviv3ufvco52ifqvtnh8758i.apps.googleusercontent.com",
+    ...(isExpoGo
+      ? { redirectUri: "https://auth.expo.io/@diegu/mobile_app" }
+      : {}),
+  };
+  const [request, response, promptAsync] = Google.useAuthRequest(googleConfig);
+//   const [request, response, promptAsync] = Google.useAuthRequest({
+//     androidClientId: "738459768384-7p0kiash0oaolbrb8o5npjiubae8qdjn.apps.googleusercontent.com",
+//     iosClientId: "738459768384-pn476o3gbviv3ufvco52ifqvtnh8758i.apps.googleusercontent.com",
+//     clientId: "738459768384-rnm8kjf2p1mbuajh34kshjbj2hbg0ked.apps.googleusercontent.com",
+// });
 
    // Manejar respuesta de Google
 React.useEffect(() => {
