@@ -19,6 +19,34 @@ export default function Register() {
   const [showPass, setShowPass] = useState(false);
 
 
+  // Añadir estados reales
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleRegister = async () => {
+    console.log("handleRegister called", { username, email, password });
+    alert("handleRegister called");
+    // if (!username || !email || !password) {
+    //   alert("Completa todos los campos");
+    //   return;
+    // }
+
+    try {
+      // TODO: reemplaza con tu llamada real a la API
+      const registroOk = true; // mock de respuesta
+      if (registroOk) {
+        console.log("navegando a onboarding");
+        router.push(`/onboarding?name=${encodeURIComponent(username)}`);
+      } else {
+        alert("Error al registrar");
+      }
+    } catch (e) {
+      alert("Error de red");
+    }
+  };
+
+
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
@@ -45,6 +73,8 @@ export default function Register() {
                 placeholderTextColor="#bfb7e6"
                 style={styles.textInput}
                 autoCapitalize="none"
+                value={username}
+                onChangeText={setUsername}
               />
             </View>
 
@@ -56,6 +86,8 @@ export default function Register() {
                 style={styles.textInput}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}           
               />
             </View>
 
@@ -66,13 +98,16 @@ export default function Register() {
                 placeholderTextColor="#bfb7e6"
                 style={styles.textInput}
                 secureTextEntry={!showPass}
+                value={password}
+                onChangeText={setPassword}
+
               />
               <Pressable style={styles.eyeButton} onPress={() => setShowPass((v) => !v)}>
                 <Text style={styles.eye}>{showPass ? "🙈" : "👁️"}</Text>
               </Pressable>
             </View>
 
-            <TouchableOpacity style={styles.primaryButton} activeOpacity={0.9}>
+            <TouchableOpacity style={styles.primaryButton} activeOpacity={0.9} onPress={handleRegister}>
               <Text style={styles.primaryButtonText}>Registrarse</Text>
             </TouchableOpacity>
 
