@@ -12,17 +12,19 @@ import {
   SafeAreaView,
   Platform,
   KeyboardAvoidingView,
+  ActivityIndicator,
 } from "react-native";
+import { registerWithEmail } from "../src/data/authService";
+import GoogleAuthButton from "./components/auth/auth_google";
 
 export default function Register() {
   const router = useRouter();
   const [showPass, setShowPass] = useState(false);
-
-
-  // Añadir estados reales
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleRegister = async () => {
     console.log("handleRegister called", { username, email, password });
@@ -107,8 +109,24 @@ export default function Register() {
               </Pressable>
             </View>
 
-            <TouchableOpacity style={styles.primaryButton} activeOpacity={0.9} onPress={handleRegister}>
-              <Text style={styles.primaryButtonText}>Registrarse</Text>
+            {errorMessage && (
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            )}
+
+            <TouchableOpacity
+              style={[
+                styles.primaryButton,
+                isLoading && { opacity: 0.7 },
+              ]}
+              activeOpacity={0.9}
+              onPress={handleRegister}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.primaryButtonText}>Registrarse</Text>
+              )}
             </TouchableOpacity>
 
             <View style={styles.orRow}>
@@ -117,9 +135,12 @@ export default function Register() {
               <View style={styles.line} />
             </View>
 
-            <TouchableOpacity style={styles.googleButton} activeOpacity={0.9}>
-              <Text style={styles.googleText}>G  Google</Text>
-            </TouchableOpacity>
+            <GoogleAuthButton
+              onSuccess={() => router.push("/onboarding" as any)}
+              onError={setErrorMessage}
+              style={styles.googleButton}
+              textStyle={styles.googleText}
+            />
 
             <View style={styles.registerRow}>
               <Text style={styles.smallText}>¿Ya tienes cuenta? </Text>
@@ -214,4 +235,9 @@ const styles = StyleSheet.create({
   },
   smallText: { color: COLORS.muted },
   registerLink: { color: COLORS.primary, fontWeight: "700" },
+  errorText: {
+    color: "#ffb4b4",
+    textAlign: "center",
+    marginBottom: 8,
+  },
 });
