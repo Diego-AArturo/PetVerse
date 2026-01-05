@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "expo-router";
+import * as Google from "expo-auth-session/providers/google";
+import * as WebBrowser from "expo-web-browser";
+
 import {
   StyleSheet,
   Text,
@@ -8,44 +11,36 @@ import {
   TouchableOpacity,
   Pressable,
   ScrollView,
-  Image,
   SafeAreaView,
   Platform,
   KeyboardAvoidingView,
+  Image,
 } from "react-native";
 
-export default function Register() {
+// ✅ NECESARIO para expo-auth-session (evita render error / pantalla en blanco)
+WebBrowser.maybeCompleteAuthSession();
+
+export default function Login() {
   const router = useRouter();
-  const [showPass, setShowPass] = useState(false);
 
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId:
+      "738459768384-7p0kiash0oaolbrb8o5npjiubae8qdjn.apps.googleusercontent.com",
+    iosClientId:
+      "738459768384-pn476o3gbviv3ufvco52ifqvtnh8758i.apps.googleusercontent.com",
+  });
 
-  // Añadir estados reales
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  useEffect(() => {
+    if (response?.type === "success") {
+      const { authentication } = response;
+      if (!authentication) return;
 
-  const handleRegister = async () => {
-    console.log("handleRegister called", { username, email, password });
-    alert("handleRegister called");
-    // if (!username || !email || !password) {
-    //   alert("Completa todos los campos");
-    //   return;
-    // }
+      console.log("TOKEN GOOGLE:", authentication.accessToken);
 
-    try {
-      // TODO: reemplaza con tu llamada real a la API
-      const registroOk = true; // mock de respuesta
-      if (registroOk) {
-        console.log("navegando a home");
-        router.replace("/tabs/home");
-      } else {
-        alert("Error al registrar");
-      }
-    } catch (e) {
-      alert("Error de red");
+      // ✅ manda al home (ajusta según tu ruta real)
+      router.replace("/tabs/home");
     }
-  };
-
+  }, [response]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -58,26 +53,16 @@ export default function Register() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.logoContainer}>
-            <Image source={require('../assets/images/logo_blanco.png')} 
-            style={styles.logoImage} />
+            <Image
+              source={require("../assets/images/logo_blanco.png")}
+              style={styles.logoImage}
+            />
           </View>
 
           <Text style={styles.title}>PetVerse</Text>
-          <Text style={styles.subtitle}>Crea tu cuenta para empezar</Text>
+          <Text style={styles.subtitle}>Inicia sesión para continuar</Text>
 
           <View style={styles.form}>
-            <View style={styles.inputRow}>
-              <Text style={styles.inputIcon}>👤</Text>
-              <TextInput
-                placeholder="Nombre de usuario"
-                placeholderTextColor="#bfb7e6"
-                style={styles.textInput}
-                autoCapitalize="none"
-                value={username}
-                onChangeText={setUsername}
-              />
-            </View>
-
             <View style={styles.inputRow}>
               <Text style={styles.inputIcon}>✉️</Text>
               <TextInput
@@ -86,8 +71,6 @@ export default function Register() {
                 style={styles.textInput}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                value={email}
-                onChangeText={setEmail}           
               />
             </View>
 
@@ -97,18 +80,19 @@ export default function Register() {
                 placeholder="Contraseña"
                 placeholderTextColor="#bfb7e6"
                 style={styles.textInput}
-                secureTextEntry={!showPass}
-                value={password}
-                onChangeText={setPassword}
-
+                secureTextEntry
               />
-              <Pressable style={styles.eyeButton} onPress={() => setShowPass((v) => !v)}>
-                <Text style={styles.eye}>{showPass ? "🙈" : "👁️"}</Text>
+              <Pressable style={styles.eyeButton}>
+                <Text style={styles.eye}>👁️</Text>
               </Pressable>
             </View>
 
-            <TouchableOpacity style={styles.primaryButton} activeOpacity={0.9} onPress={handleRegister}>
-              <Text style={styles.primaryButtonText}>Registrarse</Text>
+            <TouchableOpacity
+              style={styles.primaryButton}
+              activeOpacity={0.9}
+              onPress={() => router.replace("/tabs/home")}
+            >
+              <Text style={styles.primaryButtonText}>Iniciar Sesión</Text>
             </TouchableOpacity>
 
             <View style={styles.orRow}>
@@ -117,14 +101,19 @@ export default function Register() {
               <View style={styles.line} />
             </View>
 
-            <TouchableOpacity style={styles.googleButton} activeOpacity={0.9}>
-              <Text style={styles.googleText}>G  Google</Text>
+            <TouchableOpacity
+              style={styles.googleButton}
+              activeOpacity={0.9}
+              onPress={() => promptAsync()}
+              disabled={!request}
+            >
+              <Text style={styles.googleText}>G Google</Text>
             </TouchableOpacity>
 
             <View style={styles.registerRow}>
-              <Text style={styles.smallText}>¿Ya tienes cuenta? </Text>
-              <Pressable onPress={() => router.push("/" as any)}>
-                <Text style={styles.registerLink}>Iniciar sesión</Text>
+              <Text style={styles.smallText}>¿No tienes cuenta? </Text>
+              <Pressable onPress={() => router.push("/register")}>
+                <Text style={styles.registerLink}>Regístrate</Text>
               </Pressable>
             </View>
           </View>
@@ -133,6 +122,7 @@ export default function Register() {
     </SafeAreaView>
   );
 }
+
 
 const COLORS = {
   background: "#141033",
@@ -215,3 +205,4 @@ const styles = StyleSheet.create({
   smallText: { color: COLORS.muted },
   registerLink: { color: COLORS.primary, fontWeight: "700" },
 });
+

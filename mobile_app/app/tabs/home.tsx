@@ -9,7 +9,7 @@ import {
   SafeAreaView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from "../src/Theme/colors";
+import { COLORS } from "../../src/Theme/colors";
 
 export default function HomeScreen() {
   return (
