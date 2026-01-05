@@ -1,7 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "expo-router";
-import * as Google from "expo-auth-session/providers/google";
-import Constants, { ExecutionEnvironment } from "expo-constants";
 
 import {
   StyleSheet,
@@ -18,78 +16,25 @@ import {
   ActivityIndicator,
 } from "react-native";
 
-import { loginWithEmail, loginWithGoogleIdToken } from "./data/authService";
+import { loginWithEmail } from "../src/data/authService";
+import GoogleAuthButton from "./components/auth/auth_google";
 
 
 
 export default function Index() {
   const router = useRouter();
-  const expoProxyClientId =
-    "738459768384-rnm8kjf2p1mbuajh34kshjbj2hbg0ked.apps.googleusercontent.com"; // el ID del cliente web que tiene https://auth.expo.io/@diegv/mobile_app
-  const isExpoGo =
-    Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
-
-  const googleConfig: Partial<Google.GoogleAuthRequestConfig> = {
-    clientId: expoProxyClientId,
-    webClientId: expoProxyClientId,
-    androidClientId: isExpoGo
-      ? undefined
-      : "738459768384-7p0kiash0oaolbrb8o5npjiubae8qdjn.apps.googleusercontent.com",
-    iosClientId: isExpoGo
-      ? undefined
-      : "738459768384-pn476o3gbviv3ufvco52ifqvtnh8758i.apps.googleusercontent.com",
-    ...(isExpoGo
-      ? { redirectUri: "https://auth.expo.io/@diegu/mobile_app" }
-      : {}),
-  };
-  const [request, response, promptAsync] = Google.useAuthRequest(googleConfig);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  React.useEffect(() => {
-    const handleGoogleResponse = async () => {
-      if (!response) {
-        return;
-      }
-      if (response.type !== "success") {
-        if (response.type === "error") {
-          setErrorMessage("No se pudo completar el login con Google");
-        }
-        setIsSubmitting(false);
-        return;
-      }
-      const idToken =
-        response.authentication?.idToken ??
-        (response.params?.id_token as string | undefined);
-      if (!idToken) {
-        setErrorMessage("Google no entregó un token válido");
-        setIsSubmitting(false);
-        return;
-      }
-      try {
-        await loginWithGoogleIdToken(idToken);
-        router.push("/onboarding" as any);
-      } catch (err) {
-        const message =
-          err instanceof Error
-            ? err.message
-            : "Error al intercambiar el token con el backend";
-        setErrorMessage(message);
-      } finally {
-        setIsSubmitting(false);
-      }
-    };
-    handleGoogleResponse();
-  }, [response, router]);
-
   const handleEmailLogin = async () => {
     if (!email.trim() || !password) {
       setErrorMessage("Completa tu correo y contraseña");
       return;
     }
+    console.log("[login] intentando login email", email.trim());
     try {
       setIsSubmitting(true);
       setErrorMessage(null);
@@ -105,16 +50,6 @@ export default function Index() {
       setIsSubmitting(false);
     }
   };
-
-  const handleGoogleLogin = () => {
-    setErrorMessage(null);
-    setIsSubmitting(true);
-    promptAsync().catch(() => {
-      setIsSubmitting(false);
-      setErrorMessage("No se pudo abrir Google");
-    });
-  };
-
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -191,17 +126,16 @@ export default function Index() {
               <View style={styles.line} />
             </View>
 
-            <TouchableOpacity
+            <GoogleAuthButton
+              onSuccess={() => router.push("/onboarding" as any)}
+              onError={setErrorMessage}
               style={[
                 styles.googleButton,
-                (!request || isSubmitting) && { opacity: 0.6 },
+                isSubmitting && { opacity: 0.6 },
               ]}
-              activeOpacity={0.9}
-              onPress={handleGoogleLogin}
-              disabled={!request || isSubmitting}
-            >
-              <Text style={styles.googleText}>G  Google</Text>
-            </TouchableOpacity>
+              textStyle={styles.googleText}
+              disabled={isSubmitting}
+            />
 
             <View style={styles.registerRow}>
               <Text style={styles.smallText}>¿No tienes cuenta? </Text>

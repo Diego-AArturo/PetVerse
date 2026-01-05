@@ -2,7 +2,7 @@
   "expo": {
     "name": "mobile_app",
     "slug": "mobile_app",
-    "owner": "diegv",
+    "owner": "voxlit",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -43,7 +43,8 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

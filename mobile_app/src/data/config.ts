@@ -5,7 +5,7 @@ type ExtraConfig = {
   apiBaseUrl?: string;
 };
 
-const DEFAULT_ANDROID_BASE_URL = "http://127.0.0.1:8000";
+const DEFAULT_ANDROID_BASE_URL = "http://10.0.2.2:8000";
 const DEFAULT_IOS_BASE_URL = "http://127.0.0.1:8000";
 
 const getEnvBaseUrl = (): string | undefined => {
@@ -32,5 +32,8 @@ const getPlatformFallback = (): string => {
 
 export const API_BASE_URL =
   getEnvBaseUrl() ?? getExtraBaseUrl() ?? getPlatformFallback();
+
+// Debug helper para verificar hacia dónde se apuntan las peticiones.
+console.log("[config] API_BASE_URL", API_BASE_URL);
 
 export const REQUEST_TIMEOUT_MS = 10000;

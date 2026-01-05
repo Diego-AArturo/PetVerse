@@ -14,8 +14,8 @@ import {
   KeyboardAvoidingView,
   ActivityIndicator,
 } from "react-native";
-
-import { registerWithEmail } from "./data/authService";
+import { registerWithEmail } from "../src/data/authService";
+import GoogleAuthButton from "./components/auth/auth_google";
 
 export default function Register() {
   const router = useRouter();
@@ -31,6 +31,7 @@ export default function Register() {
       setErrorMessage("Completa todos los campos");
       return;
     }
+    console.log("[register] enviando registro con email", email.trim());
     try {
       setIsLoading(true);
       setErrorMessage(null);
@@ -138,9 +139,12 @@ export default function Register() {
               <View style={styles.line} />
             </View>
 
-            <TouchableOpacity style={styles.googleButton} activeOpacity={0.9}>
-              <Text style={styles.googleText}>G  Google</Text>
-            </TouchableOpacity>
+            <GoogleAuthButton
+              onSuccess={() => router.push("/onboarding" as any)}
+              onError={setErrorMessage}
+              style={styles.googleButton}
+              textStyle={styles.googleText}
+            />
 
             <View style={styles.registerRow}>
               <Text style={styles.smallText}>¿Ya tienes cuenta? </Text>

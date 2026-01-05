@@ -11,9 +11,9 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../src/Theme/colors";
-import { UserProfile } from "./data/model/user";
-import { restoreProfile } from "./data/authService";
-import { API_BASE_URL } from "./data/config";
+import { UserProfile } from "../src/data/model/user";
+import { restoreProfile } from "../src/data/authService";
+import { API_BASE_URL } from "../src/data/config";
 
 export default function HomeScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);

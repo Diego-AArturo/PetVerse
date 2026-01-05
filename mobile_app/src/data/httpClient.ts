@@ -56,6 +56,15 @@ export const apiRequest = async <TResponse, TBody = unknown>(
   }
 
   try {
+    console.log(
+      "[httpClient] request",
+      options.method ?? "GET",
+      buildUrl(options.path),
+      {
+        hasBody: Boolean(options.body),
+        headers: Object.keys(headers),
+      }
+    );
     const response = await fetch(buildUrl(options.path), {
       method,
       headers,
@@ -63,6 +72,7 @@ export const apiRequest = async <TResponse, TBody = unknown>(
       signal: options.signal ?? controller.signal,
     });
     const text = await response.text();
+    console.log("[httpClient] response", response.status, response.url);
     const data = parsePayload(text);
     if (!response.ok) {
       const message =
@@ -77,8 +87,10 @@ export const apiRequest = async <TResponse, TBody = unknown>(
       throw error;
     }
     if ((error as Error).name === "AbortError") {
+      console.warn("[httpClient] timeout/abort", options.path);
       throw new ApiError("La solicitud tardó demasiado", 408);
     }
+    console.error("[httpClient] unknown error", error);
     throw new ApiError(
       (error as Error).message ?? "No se pudo conectar con el servidor",
       500
