@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+// import { useEffect } from "react";
 import { useRouter } from "expo-router";
-import * as Google from "expo-auth-session/providers/google";
-import * as WebBrowser from "expo-web-browser";
+// import * as Google from "expo-auth-session/providers/google";
+// import * as WebBrowser from "expo-web-browser";
 
 import {
   StyleSheet,
@@ -18,19 +18,19 @@ import {
 } from "react-native";
 
 // ✅ NECESARIO para expo-auth-session (evita render error / pantalla en blanco)
-WebBrowser.maybeCompleteAuthSession();
+// WebBrowser.maybeCompleteAuthSession();
 
 export default function Login() {
   const router = useRouter();
 
-  const [request, response, promptAsync] = Google.useAuthRequest({
+  /* const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId:
       "738459768384-7p0kiash0oaolbrb8o5npjiubae8qdjn.apps.googleusercontent.com",
     iosClientId:
       "738459768384-pn476o3gbviv3ufvco52ifqvtnh8758i.apps.googleusercontent.com",
-  });
+  }); */
 
-  useEffect(() => {
+  /* useEffect(() => {
     if (response?.type === "success") {
       const { authentication } = response;
       if (!authentication) return;
@@ -40,7 +40,7 @@ export default function Login() {
       // ✅ manda al home (ajusta según tu ruta real)
       router.replace("/tabs/home");
     }
-  }, [response]);
+  }, [response]); */
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -101,14 +101,14 @@ export default function Login() {
               <View style={styles.line} />
             </View>
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.googleButton}
               activeOpacity={0.9}
               onPress={() => promptAsync()}
               disabled={!request}
             >
               <Text style={styles.googleText}>G Google</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             <View style={styles.registerRow}>
               <Text style={styles.smallText}>¿No tienes cuenta? </Text>

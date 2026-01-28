@@ -25,6 +25,25 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
+## Expo Go note
+
+For local testing with Expo Go, Google authentication is temporarily commented out in `app/login.tsx` and `app/register.tsx`. Re-enable those lines for production or when using a development build.
+
+## Architecture overview
+
+### `app/` (routes and UI)
+- File-based routing with `expo-router` in `app/_layout.tsx`.
+- Entry route in `app/index.tsx` redirects to `app/login.tsx`.
+- Auth screens live in `app/login.tsx` and `app/register.tsx`.
+- Tab navigation is defined in `app/tabs/_layout.tsx` with `app/tabs/home.tsx` as the main screen.
+- UI components for auth live in `app/components/auth/` (e.g. Google auth button component).
+
+### `src/` (data + shared utilities)
+- `src/data/` contains API clients (`httpClient.ts`), auth flows (`authService.ts`), user fetches (`userService.ts`), and token storage (`tokenStorage.ts`).
+- `src/data/model/` defines TypeScript models for auth, user, and pet data.
+- `src/data/config.ts` holds API base URL resolution and request timeout config.
+- `src/Theme/` includes shared colors for consistent styling.
+
 ## Get a fresh project
 
 When you're ready, run:

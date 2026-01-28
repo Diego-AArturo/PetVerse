@@ -15,7 +15,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { registerWithEmail } from "../src/data/authService";
-import GoogleAuthButton from "./components/auth/auth_google";
+// import GoogleAuthButton from "./components/auth/auth_google";
 
 export default function Register() {
   const router = useRouter();
@@ -135,12 +135,12 @@ export default function Register() {
               <View style={styles.line} />
             </View>
 
-            <GoogleAuthButton
-              onSuccess={() => router.push("/onboarding" as any)}
+            {/* <GoogleAuthButton
+              onSuccess={() => router.push("/tabs/home" as any)}
               onError={setErrorMessage}
               style={styles.googleButton}
               textStyle={styles.googleText}
-            />
+            /> */}
 
             <View style={styles.registerRow}>
               <Text style={styles.smallText}>¿Ya tienes cuenta? </Text>
