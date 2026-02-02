@@ -16,7 +16,7 @@
 //   statusCodes as GoogleStatusCodes,
 // } from "@react-native-google-signin/google-signin";
 
-// import { loginWithGoogleIdToken } from "../../../src/data/authService";
+// import { loginWithGoogleIdToken } from "../../data/authService";
 
 // type GoogleAuthButtonProps = {
 //   onSuccess: () => void;

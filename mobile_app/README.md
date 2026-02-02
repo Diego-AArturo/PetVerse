@@ -39,10 +39,10 @@ For local testing with Expo Go, Google authentication is temporarily commented o
 - UI components for auth live in `app/components/auth/` (e.g. Google auth button component).
 
 ### `src/` (data + shared utilities)
-- `src/data/` contains API clients (`httpClient.ts`), auth flows (`authService.ts`), user fetches (`userService.ts`), and token storage (`tokenStorage.ts`).
-- `src/data/model/` defines TypeScript models for auth, user, and pet data.
-- `src/data/config.ts` holds API base URL resolution and request timeout config.
-- `src/Theme/` includes shared colors for consistent styling.
+- `app/data/` contains API clients (`httpClient.ts`), auth flows (`authService.ts`), user fetches (`userService.ts`), and token storage (`tokenStorage.ts`).
+- `app/data/model/` defines TypeScript models for auth, user, and pet data.
+- `app/data/config.ts` holds API base URL resolution and request timeout config.
+- `app/Theme/` includes shared colors for consistent styling.
 
 ## Get a fresh project
 

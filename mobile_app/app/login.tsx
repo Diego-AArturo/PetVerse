@@ -1,5 +1,7 @@
 // import { useEffect } from "react";
 import { useRouter } from "expo-router";
+import { useState } from "react";
+import { loginWithEmail } from "../src/data/authService";
 // import * as Google from "expo-auth-session/providers/google";
 // import * as WebBrowser from "expo-web-browser";
 
@@ -11,17 +13,22 @@ import {
   TouchableOpacity,
   Pressable,
   ScrollView,
-  SafeAreaView,
   Platform,
   KeyboardAvoidingView,
   Image,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // ✅ NECESARIO para expo-auth-session (evita render error / pantalla en blanco)
 // WebBrowser.maybeCompleteAuthSession();
 
 export default function Login() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   /* const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId:
@@ -38,9 +45,28 @@ export default function Login() {
       console.log("TOKEN GOOGLE:", authentication.accessToken);
 
       // ✅ manda al home (ajusta según tu ruta real)
-      router.replace("/tabs/home");
+      router.replace("/tabs/home" as any); // rutas tipadas desactualizadas
     }
   }, [response]); */
+
+  const handleLogin = async () => {
+    setErrorMessage(null);
+    if (!email || !password) {
+      setErrorMessage("Ingresa email y contraseña");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await loginWithEmail({ email, password });
+      router.replace("/tabs/home" as any);
+    } catch (err: any) {
+      const message =
+        err?.message ?? "No se pudo iniciar sesión. Verifica tus datos.";
+      setErrorMessage(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -71,6 +97,8 @@ export default function Login() {
                 style={styles.textInput}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
               />
             </View>
 
@@ -80,19 +108,31 @@ export default function Login() {
                 placeholder="Contraseña"
                 placeholderTextColor="#bfb7e6"
                 style={styles.textInput}
-                secureTextEntry
+                secureTextEntry={!showPass}
+                value={password}
+                onChangeText={setPassword}
               />
-              <Pressable style={styles.eyeButton}>
-                <Text style={styles.eye}>👁️</Text>
+              <Pressable
+                style={styles.eyeButton}
+                onPress={() => setShowPass((v) => !v)}
+              >
+                <Text style={styles.eye}>{showPass ? "🙈" : "👁️"}</Text>
               </Pressable>
             </View>
+
+            {errorMessage && (
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            )}
 
             <TouchableOpacity
               style={styles.primaryButton}
               activeOpacity={0.9}
-              onPress={() => router.replace("/tabs/home")}
+              onPress={handleLogin}
+              disabled={isLoading}
             >
-              <Text style={styles.primaryButtonText}>Iniciar Sesión</Text>
+              <Text style={styles.primaryButtonText}>
+                {isLoading ? "Ingresando..." : "Iniciar Sesión"}
+              </Text>
             </TouchableOpacity>
 
             <View style={styles.orRow}>
@@ -204,5 +244,10 @@ const styles = StyleSheet.create({
   },
   smallText: { color: COLORS.muted },
   registerLink: { color: COLORS.primary, fontWeight: "700" },
+  errorText: {
+    color: "#ffb4b4",
+    textAlign: "center",
+    marginBottom: 8,
+  },
 });
 

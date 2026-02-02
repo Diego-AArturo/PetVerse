@@ -9,11 +9,11 @@ import {
   Pressable,
   ScrollView,
   Image,
-  SafeAreaView,
   Platform,
   KeyboardAvoidingView,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { registerWithEmail } from "../src/data/authService";
 // import GoogleAuthButton from "./components/auth/auth_google";
 
@@ -27,24 +27,19 @@ export default function Register() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleRegister = async () => {
-    console.log("handleRegister called", { username, email, password });
-    alert("handleRegister called");
-    // if (!username || !email || !password) {
-    //   alert("Completa todos los campos");
-    //   return;
-    // }
-
+    setErrorMessage(null);
+    if (!username || !email || !password) {
+      setErrorMessage("Completa todos los campos");
+      return;
+    }
+    setIsLoading(true);
     try {
-      // TODO: reemplaza con tu llamada real a la API
-      const registroOk = true; // mock de respuesta
-      if (registroOk) {
-        console.log("navegando a home");
-        router.replace("/tabs/home");
-      } else {
-        alert("Error al registrar");
-      }
-    } catch (e) {
-      alert("Error de red");
+      await registerWithEmail({ name: username, email, password });
+      router.replace("/tabs/home" as any); // rutas tipadas desactualizadas
+    } catch (e: any) {
+      setErrorMessage(e?.message ?? "Error al registrar");
+    } finally {
+      setIsLoading(false);
     }
   };
 
