@@ -8,6 +8,9 @@ from src.db import test_connection, wait_for_db
 from src.routers.auth import router as auth_router
 from src.routers.users import router as users_router
 from src.routers.pets import router as pets_router
+from src.routers.pet_records import router as pet_records_router
+from src.routers.user_profile import router as user_profile_router
+from src.routers.posts import router as posts_router
 
 def create_app() -> FastAPI:
     app = FastAPI(title="PetVerse API")
@@ -30,6 +33,9 @@ def create_app() -> FastAPI:
     app.include_router(auth_router, prefix="/auth")
     app.include_router(users_router)
     app.include_router(pets_router)
+    app.include_router(pet_records_router)
+    app.include_router(user_profile_router)
+    app.include_router(posts_router)
 
     @app.on_event("startup")
     async def startup_event():
