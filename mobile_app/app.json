@@ -2,7 +2,7 @@
   "expo": {
     "name": "mobile_app",
     "slug": "mobile_app",
-    "owner": "voxlit",
+    "owner": "keirym9",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -29,6 +29,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "@maplibre/maplibre-react-native",
       "expo-router",
       [
         "expo-splash-screen",
