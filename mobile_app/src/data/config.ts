@@ -6,7 +6,8 @@ type ExtraConfig = {
 };
 
 const DEFAULT_ANDROID_BASE_URL = "http://10.0.2.2:8000" //Diego http://192.168.20.75:8000";
-const DEFAULT_IOS_BASE_URL = "http://192.168.1.19:8000";
+const DEFAULT_IOS_BASE_URL = "http://192.168.20.75:8000"; //Keiry http://192.168.1.19:8000
+const DEFAULT_WEB_BASE_URL = "http://192.168.20.75:8000";
 
 const getEnvBaseUrl = (): string | undefined => {
   try {
@@ -27,13 +28,16 @@ const getPlatformFallback = (): string => {
   if (Platform.OS === "android") {
     return DEFAULT_ANDROID_BASE_URL;
   }
+  if (Platform.OS === "web") {
+    return DEFAULT_WEB_BASE_URL;
+  }
   return DEFAULT_IOS_BASE_URL;
 };
 
 export const API_BASE_URL =
   getEnvBaseUrl() ?? getExtraBaseUrl() ?? getPlatformFallback();
 
-// Debug helper para verificar hacia dónde se apuntan las peticiones.
+// Debug helper para verificar hacia donde se apuntan las peticiones.
 console.log("[config] API_BASE_URL", API_BASE_URL);
 
 export const REQUEST_TIMEOUT_MS = 10000;
