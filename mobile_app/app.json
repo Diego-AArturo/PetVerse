@@ -45,7 +45,15 @@
       ],
       "expo-font",
       "expo-web-browser",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "PetVerse necesita acceso a tu ubicación para mostrarte en el mapa.",
+          "locationAlwaysPermission": "PetVerse necesita acceso a tu ubicación en segundo plano.",
+          "locationWhenInUsePermission": "PetVerse necesita acceso a tu ubicación para mostrarte en el mapa."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
