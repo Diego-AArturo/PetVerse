@@ -1,5 +1,17 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Platform, StyleSheet, Text, View, ActivityIndicator } from "react-native";
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+  ActivityIndicator,
+  TextInput,
+  TouchableOpacity,
+  Keyboard,
+  ScrollView,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { COLORS } from "../../src/Theme/colors";
 
 // Importar MapLibre solo en native (fuera del componente para evitar re-imports)
 const MapLibreGL =
@@ -32,7 +44,31 @@ export default function MapScreen() {
   const [isMapReady, setIsMapReady] = useState(false);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [permissionGranted, setPermissionGranted] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   const initRef = useRef(false);
+
+  // función de búsqueda/geo-coding
+  const onSearch = useCallback(async () => {
+    if (!maptilerKey || !searchQuery) return;
+    try {
+      const url = `https://api.maptiler.com/geocoding/${encodeURIComponent(
+        searchQuery
+      )}.json?key=${maptilerKey}`;
+      const resp = await fetch(url);
+      const json = await resp.json();
+      if (json.features && json.features.length > 0) {
+        const [lng, lat] = json.features[0].geometry.coordinates;
+        setUserLocation([lng, lat]);
+      } else {
+        console.log("[Search] no results for", searchQuery);
+      }
+    } catch (err) {
+      console.log("[Search] error", err);
+    }
+    Keyboard.dismiss();
+  }, [maptilerKey, searchQuery]);
 
   // URL de tiles raster de MapTiler
   const tileURL = maptilerKey
@@ -91,7 +127,6 @@ export default function MapScreen() {
 
   // Solicitar permisos de ubicación y obtener la posición actual
   useEffect(() => {
-    // Si expo-location no está disponible, saltar
     if (!Location) {
       console.log("[Location] Module not available, skipping location");
       return;
@@ -99,30 +134,49 @@ export default function MapScreen() {
 
     const getLocation = async () => {
       try {
-        // Solicitar permisos de ubicación en primer plano
         const { status } = await Location.requestForegroundPermissionsAsync();
-        
         if (status !== "granted") {
           setLocationError("Permiso de ubicación denegado");
           console.log("[Location] Permission denied");
+          // fallback to approximate via IP lookup ' marcar ubicacion de la persona
+          try {
+            const resp = await fetch("https://ipapi.co/json/");
+            const json = await resp.json();
+            if (json && json.latitude && json.longitude) {
+              setUserLocation([json.longitude, json.latitude]);
+            }
+          } catch (e) {
+            console.log("[Location] IP geolocation failed", e);
+          }
           return;
         }
 
-        // Obtener ubicación actual
+        setPermissionGranted(true);
         const location = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
         });
-
         const coords: [number, number] = [
           location.coords.longitude,
           location.coords.latitude,
         ];
-        
         setUserLocation(coords);
         console.log("[Location] User location:", coords);
       } catch (error) {
         console.log("[Location] Error getting location:", error);
         setLocationError("Error al obtener ubicación");
+        // try to fall back to IP location as well
+        try {
+          const resp2 = await fetch("https://ipapi.co/json/");
+          const j2 = await resp2.json();
+          if (j2 && j2.latitude && j2.longitude) {
+            setUserLocation([j2.longitude, j2.latitude]);
+          } else {
+            setUserLocation(DEFAULT_COORDINATES);
+          }
+        } catch (e2) {
+          console.log("[Location] fallback IP failed", e2);
+          setUserLocation(DEFAULT_COORDINATES);
+        }
       }
     };
 
@@ -159,7 +213,7 @@ export default function MapScreen() {
   if (!isMapReady) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color="#fff" />
+        <ActivityIndicator size="large" color={COLORS.textPrimary} />
         <Text style={styles.subtitle}>Cargando mapa...</Text>
       </View>
     );
@@ -167,6 +221,52 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
+      {/* search + filters section */}
+      <View style={styles.searchWrapper}>
+        <View style={styles.searchContainer}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Buscar dirección o lugar"
+            placeholderTextColor={COLORS.tabInactive}
+            returnKeyType="search"
+            onSubmitEditing={onSearch}
+            onFocus={() => setShowFilters(true)}
+            onBlur={() => setShowFilters(false)}
+          />
+        </View>
+        {showFilters && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.filtersContainer}
+            contentContainerStyle={{ paddingVertical: 4 }}
+          >
+            {[
+              { label: 'Veterinarias', icon: 'medkit' },
+              { label: 'Pet Friendly', icon: 'heart' },
+              { label: 'Heladerías', icon: 'ice-cream' },
+              { label: 'Restaurantes', icon: 'restaurant' },
+              { label: 'Tiendas', icon: 'storefront' },
+              { label: 'Guarderías', icon: 'school' },
+            ].map(item => (
+              <TouchableOpacity
+                key={item.label}
+                style={styles.filterPill}
+                onPress={() => {
+                  setSearchQuery(item.label);
+                  onSearch();
+                }}
+              >
+                <Ionicons name={item.icon as any} size={14} color={COLORS.bgDark} />
+                <Text style={styles.filterText}>{item.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
+      </View>
       <MapLibreGL.MapView
         style={{ flex: 1 }}
         styleJSON={EMPTY_STYLE}
@@ -175,6 +275,8 @@ export default function MapScreen() {
         onDidFailLoadingMap={(e: any) => logEvent("DidFailLoadingMap", e?.nativeEvent)}
         onMapError={(e: any) => logEvent("MapError", e?.nativeEvent)}
       >
+        {/* user location dot */}
+        <MapLibreGL.UserLocation visible={permissionGranted} />
         {/* RasterSource con tiles de MapTiler */}
         <MapLibreGL.RasterSource
           id="maptilerSource"
@@ -195,44 +297,77 @@ export default function MapScreen() {
           centerCoordinate={userLocation || DEFAULT_COORDINATES}
           animationMode="flyTo"
           animationDuration={2000}
+          followUserLocation={permissionGranted}
         />
 
-        {/* Marcador de ubicación del usuario */}
-        {userLocation && (
-          <MapLibreGL.PointAnnotation
-            id="userLocation"
-            coordinate={userLocation}
-            title="Tu ubicación"
-          >
-            <View style={styles.userMarker}>
-              <View style={styles.userMarkerInner} />
-            </View>
-          </MapLibreGL.PointAnnotation>
-        )}
       </MapLibreGL.MapView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#141033", padding: 0 },
+  container: { flex: 1, backgroundColor: COLORS.bgDark, padding: 0 },
   centered: { justifyContent: "center", alignItems: "center" },
-  title: { color: "#fff", fontSize: 22, fontWeight: "800" },
-  subtitle: { color: "#d0c9f7", marginTop: 6 },
+  title: { color: COLORS.textPrimary, fontSize: 22, fontWeight: "800" },
+  subtitle: { color: COLORS.textSecondary, marginTop: 6 },
+  searchWrapper: {
+    position: "absolute",
+    top: 60,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    paddingHorizontal: 10,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.textPrimary,
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    height: 44,
+  },
+  searchIcon: {
+    marginRight: 6,
+    fontSize: 18,
+    color: COLORS.tabInactive,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    height: "100%",
+  },
+  filtersContainer: {
+    flexDirection: "row",
+    marginTop: 8,
+  },
+  filterPill: {
+    backgroundColor: COLORS.textPrimary,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    marginRight: 8,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  filterText: {
+    fontSize: 12,
+    color: COLORS.bgDark,
+    marginLeft: 4,
+  },
   userMarker: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "rgba(66, 133, 244, 0.3)",
+    backgroundColor: "rgba(123, 92, 255, 0.3)", // translucent purple
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "#4285F4",
+    borderColor: COLORS.cardPurple,
   },
   userMarkerInner: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: "#4285F4",
+    backgroundColor: COLORS.cardPurple,
   },
 });

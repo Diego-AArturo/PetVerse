@@ -5,9 +5,9 @@ type ExtraConfig = {
   apiBaseUrl?: string;
 };
 
-const DEFAULT_ANDROID_BASE_URL = "http://192.168.20.75:8000" //Diego http://192.168.20.75:8000";
-const DEFAULT_IOS_BASE_URL = "http://192.168.20.75:8000"; //Keiry http://192.168.1.19:8000
-const DEFAULT_WEB_BASE_URL = "http://192.168.20.75:8000";
+const DEFAULT_ANDROID_BASE_URL = "http://172.20.10.4:8000" //Diego http://192.168.20.75:8000";
+const DEFAULT_IOS_BASE_URL = "http://172.20.10.4:8000"; //Keiry http://192.168.1.19:8000     172.20.10.1
+const DEFAULT_WEB_BASE_URL = "http://172.20.10.4:8000";
 
 const getEnvBaseUrl = (): string | undefined => {
   try {
@@ -16,6 +16,7 @@ const getEnvBaseUrl = (): string | undefined => {
     return undefined;
   }
 };
+
 
 const getExtraBaseUrl = (): string | undefined => {
   const extra = (Constants.expoConfig?.extra ??
