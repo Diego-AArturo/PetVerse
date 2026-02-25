@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { COLORS } from "../../src/Theme/colors";
 import { UserProfile } from "../../src/data/model/user";
 import { restoreProfile } from "../../src/data/authService";
@@ -28,6 +29,7 @@ type PetCardData = {
 };
 
 export default function HomeScreen() {
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [pets, setPets] = useState<PetCardData[]>([]);
   const [selectedPet, setSelectedPet] = useState<PetCardData | null>(null);
@@ -40,7 +42,7 @@ export default function HomeScreen() {
       setErrorMessage(null);
       const tokens = await getTokens();
       if (!tokens) {
-        setErrorMessage("No encontramos una sesión activa.");
+        setErrorMessage(t("home.noActiveSession"));
         setProfile(null);
         return;
       }
@@ -55,12 +57,12 @@ export default function HomeScreen() {
       const message =
         error instanceof Error
           ? error.message
-          : "No se pudo obtener tu información.";
+          : t("home.couldNotLoadInfo");
       setErrorMessage(message);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadProfileAndPets();
@@ -70,7 +72,7 @@ export default function HomeScreen() {
     return (
       <SafeAreaView style={[styles.container, styles.centerContent]}>
         <ActivityIndicator color="#fff" />
-        <Text style={styles.loadingText}>Cargando tu perfil...</Text>
+        <Text style={styles.loadingText}>{t("home.loadingProfile")}</Text>
       </SafeAreaView>
     );
   }
@@ -80,7 +82,7 @@ export default function HomeScreen() {
       <SafeAreaView style={[styles.container, styles.centerContent]}>
         <Text style={styles.errorText}>{errorMessage}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={loadProfileAndPets}>
-          <Text style={styles.retryText}>Reintentar</Text>
+          <Text style={styles.retryText}>{t("common.retry")}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -92,8 +94,8 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.topBar}>
           <View>
-            <Text style={styles.muted}>¡Buenos días! 👋</Text>
-            <Text style={styles.title}>Panel</Text>
+            <Text style={styles.muted}>{t("home.greeting")}</Text>
+            <Text style={styles.title}>{t("home.dashboard")}</Text>
           </View>
           <View style={styles.actions}>
             <TouchableOpacity style={styles.iconButton}>
@@ -115,7 +117,7 @@ export default function HomeScreen() {
           {pets.length === 0 ? (
             <View style={styles.emptyPetCard}>
               <Ionicons name="paw" size={18} color="#fff" />
-              <Text style={styles.petCardText}>Agrega tu primera mascota</Text>
+              <Text style={styles.petCardText}>{t("home.pets.addFirst")}</Text>
             </View>
           ) : (
             pets.map((pet) => {
@@ -157,37 +159,37 @@ export default function HomeScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.bannerText}>
               {selectedPet
-                ? `Mantén al día las vacunas de ${selectedPet.name}.`
-                : "Registra una mascota para recibir recordatorios."}
+                ? t("home.pets.keepVaccinesUpToDate", { name: selectedPet.name })
+                : t("home.pets.registerForReminders")}
             </Text>
           </View>
           <TouchableOpacity style={styles.bannerAction}>
-            <Text style={styles.bannerActionText}>Ver</Text>
+            <Text style={styles.bannerActionText}>{t("common.view")}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Stats rápidos */}
         <View style={styles.quickRow}>
           <StatCard
-            title="Salud"
+            title={t("home.stats.health")}
             value="—"
             icon="heart-outline"
             variant="purple"
           />
           <StatCard
-            title="Vacunas"
+            title={t("home.stats.vaccines")}
             value="—"
             icon="medkit-outline"
             variant="blue"
           />
           <StatCard
-            title="Medicación"
+            title={t("home.stats.medication")}
             value="—"
             icon="pulse-outline"
             variant="blue"
           />
           <StatCard
-            title="Última visita"
+            title={t("home.stats.lastVisit")}
             value="—"
             icon="calendar-outline"
             variant="purple"
@@ -210,13 +212,13 @@ export default function HomeScreen() {
             </View>
             <View style={styles.metricsRow}>
               <MiniMetric
-                label="Peso"
+                label={t("home.stats.weight")}
                 value={
                   selectedPet.weight ? `${selectedPet.weight.toFixed(1)} kg` : "—"
                 }
                 icon="scale-outline"
               />
-              <MiniMetric label="Especie" value={selectedPet.species} icon="paw" />
+              <MiniMetric label={t("home.stats.species")} value={selectedPet.species} icon="paw" />
             </View>
           </View>
         )}
@@ -224,13 +226,13 @@ export default function HomeScreen() {
         {/* Próximos eventos / vacío */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Próximos</Text>
-            <Text style={styles.sectionLink}>Ver todo</Text>
+            <Text style={styles.sectionTitle}>{t("home.upcoming.title")}</Text>
+            <Text style={styles.sectionLink}>{t("common.viewAll")}</Text>
           </View>
           <View style={styles.emptyUpcoming}>
             <Ionicons name="calendar-outline" size={18} color={COLORS.textSecondary} />
             <Text style={styles.muted}>
-              Aún no tienes recordatorios. Añade vacunas o citas.
+              {t("home.upcoming.empty")}
             </Text>
           </View>
         </View>
@@ -242,15 +244,19 @@ export default function HomeScreen() {
               <Ionicons name="sparkles-outline" size={18} color="#fff" />
             </View>
             <View>
-              <Text style={styles.aiTitle}>Asistente IA</Text>
+              <Text style={styles.aiTitle}>{t("home.aiAssistant.title")}</Text>
               <Text style={styles.aiSubtitle}>
-                Pregunta sobre {selectedPet?.name ?? "tu mascota"}
+                {selectedPet
+                  ? t("home.aiAssistant.subtitle", { name: selectedPet.name })
+                  : t("home.aiAssistant.subtitleDefault")}
               </Text>
             </View>
           </View>
           <View style={styles.aiInputRow}>
             <Text style={styles.aiPlaceholder}>
-              ¿Qué debería comer hoy {selectedPet?.name ?? "mi mascota"}?
+              {selectedPet
+                ? t("home.aiAssistant.placeholder", { name: selectedPet.name })
+                : t("home.aiAssistant.placeholderDefault")}
             </Text>
             <TouchableOpacity style={styles.aiSend}>
               <Ionicons name="paper-plane" size={18} color="#fff" />

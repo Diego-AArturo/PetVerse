@@ -1,72 +1,216 @@
-# Welcome to your Expo app 👋
+# PetVerse Mobile App 🐾
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicación móvil para la gestión de mascotas construida con [Expo](https://expo.dev) y React Native.
 
-## Get started
+## Comenzar
 
-1. Install dependencies
+1. Instalar dependencias
 
    ```bash
    npm install
    ```
 
-2. Start the app
+2. Iniciar la app
 
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+En la consola encontrarás opciones para abrir la app en:
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Development build](https://docs.expo.dev/develop/development-builds/introduction/)
 - [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- [Expo Go](https://expo.dev/go), sandbox limitado para pruebas rápidas
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Nota sobre Expo Go
 
-## Expo Go note
+Para pruebas locales con Expo Go, la autenticación con Google está temporalmente comentada en `app/login.tsx` y `app/register.tsx`. Reactiva esas líneas para producción o al usar un development build.
 
-For local testing with Expo Go, Google authentication is temporarily commented out in `app/login.tsx` and `app/register.tsx`. Re-enable those lines for production or when using a development build.
+## Arquitectura del proyecto
 
-## Architecture overview
+```
+mobile_app/
+├── app/                      # Rutas y pantallas (file-based routing)
+│   ├── _layout.tsx           # Layout raíz, inicializa i18n
+│   ├── index.tsx             # Redirige a login
+│   ├── login.tsx             # Pantalla de inicio de sesión
+│   ├── register.tsx          # Pantalla de registro
+│   └── tabs/                 # Navegación por pestañas
+│       ├── _layout.tsx       # Configuración de tabs
+│       ├── home.tsx          # Dashboard principal
+│       ├── profile.tsx       # Perfil de mascotas
+│       ├── community.tsx     # Feed de comunidad
+│       ├── map.tsx           # Mapa de servicios
+│       └── services.tsx      # Reservas de servicios
+├── src/                      # Lógica de negocio y utilidades
+│   ├── components/           # Componentes reutilizables
+│   │   ├── auth/             # Componentes de autenticación
+│   │   └── layout/           # BottomNav, FloatingActionButton
+│   ├── data/                 # Capa de datos
+│   │   ├── authService.ts    # Login, registro, restaurar sesión
+│   │   ├── userService.ts    # Perfil de usuario
+│   │   ├── petService.ts     # CRUD de mascotas
+│   │   ├── httpClient.ts     # Cliente HTTP base
+│   │   ├── tokenStorage.ts   # Almacenamiento seguro de tokens
+│   │   ├── config.ts         # URL base y configuración
+│   │   └── model/            # Tipos TypeScript
+│   │       ├── auth.ts
+│   │       ├── user.ts
+│   │       └── pet.ts
+│   ├── i18n/                 # Internacionalización
+│   │   ├── index.ts          # Configuración de i18next
+│   │   └── i18next.d.ts      # Tipos para autocompletado
+│   └── Theme/
+│       └── colors.ts         # Paleta de colores
+├── public/
+│   └── locales/              # Archivos de traducción
+│       └── es/
+│           └── translation.json
+└── assets/
+    └── images/               # Imágenes y logos
+```
 
-### `app/` (routes and UI)
-- File-based routing with `expo-router` in `app/_layout.tsx`.
-- Entry route in `app/index.tsx` redirects to `app/login.tsx`.
-- Auth screens live in `app/login.tsx` and `app/register.tsx`.
-- Tab navigation is defined in `app/tabs/_layout.tsx` with `app/tabs/home.tsx` as the main screen.
-- UI components for auth live in `app/components/auth/` (e.g. Google auth button component).
+### `app/` - Rutas y UI
+- **File-based routing** con `expo-router`
+- El layout raíz (`_layout.tsx`) inicializa i18next importando `../src/i18n`
+- Pantallas de autenticación: `login.tsx` y `register.tsx`
+- Navegación por tabs en `tabs/_layout.tsx` con 5 pestañas principales
 
-### `src/` (data + shared utilities)
-- `app/data/` contains API clients (`httpClient.ts`), auth flows (`authService.ts`), user fetches (`userService.ts`), and token storage (`tokenStorage.ts`).
-- `app/data/model/` defines TypeScript models for auth, user, and pet data.
-- `app/data/config.ts` holds API base URL resolution and request timeout config.
-- `app/Theme/` includes shared colors for consistent styling.
+### `src/components/` - Componentes UI
+- `layout/BottomNav.tsx` - Barra de navegación inferior personalizada
+- `layout/FloatingActionButton.tsx` - Botón flotante para agregar mascotas
+- `auth/auth_google.tsx` - Botón de autenticación con Google
 
-## Get a fresh project
+### `src/data/` - Capa de datos
+- **authService.ts** - Maneja login, registro y restauración de sesión
+- **userService.ts** - Obtiene perfil del usuario
+- **petService.ts** - CRUD completo de mascotas
+- **httpClient.ts** - Cliente HTTP con interceptores y manejo de errores
+- **tokenStorage.ts** - Almacenamiento seguro con expo-secure-store
+- **config.ts** - Resolución de URL base del API
 
-When you're ready, run:
+### `src/Theme/` - Estilos globales
+- `colors.ts` - Paleta de colores consistente para toda la app
+
+---
+
+## Internacionalización (i18n)
+
+La app usa [react-i18next](https://react.i18next.com/) para el manejo de traducciones.
+
+### Estructura de traducciones
+
+Las traducciones están organizadas por módulo en `public/locales/{idioma}/translation.json`:
+
+```json
+{
+  "common": {
+    "appName": "PetVerse",
+    "loading": "Cargando...",
+    "retry": "Reintentar",
+    "save": "Guardar",
+    ...
+  },
+  "tabs": {
+    "home": "Inicio",
+    "pets": "Mascotas",
+    ...
+  },
+  "auth": {
+    "login": { ... },
+    "register": { ... }
+  },
+  "home": { ... },
+  "community": { ... },
+  "map": { ... },
+  "services": { ... },
+  "profile": { ... }
+}
+```
+
+### Uso en componentes
+
+```tsx
+import { useTranslation } from "react-i18next";
+
+export default function MyComponent() {
+  const { t } = useTranslation();
+  
+  return (
+    <Text>{t("common.appName")}</Text>
+    <Text>{t("home.pets.keepVaccinesUpToDate", { name: "Max" })}</Text>
+  );
+}
+```
+
+### Agregar un nuevo idioma
+
+1. **Crear el archivo de traducción:**
+   ```
+   public/locales/{codigo-idioma}/translation.json
+   ```
+   Por ejemplo, para inglés: `public/locales/en/translation.json`
+
+2. **Copiar la estructura** de `public/locales/es/translation.json` y traducir los valores
+
+3. **Registrar el idioma** en `src/i18n/index.ts`:
+   ```ts
+   import i18n from "i18next";
+   import { initReactI18next } from "react-i18next";
+   import es from "../../public/locales/es/translation.json";
+   import en from "../../public/locales/en/translation.json"; // Nuevo
+
+   const resources = {
+     es: { translation: es },
+     en: { translation: en }, // Nuevo
+   };
+
+   i18n.use(initReactI18next).init({
+     resources,
+     lng: "es", // Idioma por defecto
+     fallbackLng: "es",
+     // ...
+   });
+   ```
+
+4. **Actualizar tipos** (opcional pero recomendado) en `src/i18n/i18next.d.ts` si necesitas autocompletado específico para el nuevo idioma.
+
+### Cambiar idioma en runtime
+
+```ts
+import i18n from "../src/i18n";
+
+// Cambiar a inglés
+i18n.changeLanguage("en");
+
+// Obtener idioma actual
+const currentLang = i18n.language;
+```
+
+---
+
+## Reiniciar proyecto
+
+Para empezar desde cero:
 
 ```bash
 npm run reset-project
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Este comando moverá el código actual a **app-example** y creará un directorio **app** vacío.
 
-## Learn more
+## Recursos
 
-To learn more about developing your project with Expo, look at the following resources:
+- [Documentación de Expo](https://docs.expo.dev/)
+- [Tutorial de Expo](https://docs.expo.dev/tutorial/introduction/)
+- [react-i18next docs](https://react.i18next.com/)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Comunidad
 
-## Join the community
+- [Expo en GitHub](https://github.com/expo/expo)
+- [Discord de Expo](https://chat.expo.dev)
 
-Join our community of developers creating universal apps.
+---
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
-
-SH1 Android
-2C:62:2C:4F:86:98:56:90:0F:06:2D:E8:26:F6:5A:F4:28:C1:D8:6A
+**SHA1 Android:** `2C:62:2C:4F:86:98:56:90:0F:06:2D:E8:26:F6:5A:F4:28:C1:D8:6A`

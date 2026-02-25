@@ -1,14 +1,17 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { COLORS } from "../../src/Theme/colors";
 
 export default function ServicesScreen() {
+  const { t } = useTranslation();
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>Servicios</Text>
+        <Text style={styles.title}>{t("services.title")}</Text>
         <Text style={styles.subtitle}>
-          Próximamente podrás reservar grooming, veterinario y más.
+          {t("services.comingSoon")}
         </Text>
       </View>
     </SafeAreaView>

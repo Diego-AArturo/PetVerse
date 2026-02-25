@@ -11,6 +11,7 @@ import {
   ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { COLORS } from "../../src/Theme/colors";
 
 // Importar MapLibre solo en native (fuera del componente para evitar re-imports)
@@ -40,6 +41,7 @@ const EMPTY_STYLE = JSON.stringify({
 const DEFAULT_COORDINATES: [number, number] = [-74.0817, 4.6097];
 
 export default function MapScreen() {
+  const { t } = useTranslation();
   const maptilerKey = process.env.EXPO_PUBLIC_MAPTILER_KEY;
   const [isMapReady, setIsMapReady] = useState(false);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
@@ -136,7 +138,7 @@ export default function MapScreen() {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
-          setLocationError("Permiso de ubicación denegado");
+          setLocationError(t("map.errors.locationDenied"));
           console.log("[Location] Permission denied");
           // fallback to approximate via IP lookup ' marcar ubicacion de la persona
           try {
@@ -163,7 +165,7 @@ export default function MapScreen() {
         console.log("[Location] User location:", coords);
       } catch (error) {
         console.log("[Location] Error getting location:", error);
-        setLocationError("Error al obtener ubicación");
+        setLocationError(t("map.errors.locationError"));
         // try to fall back to IP location as well
         try {
           const resp2 = await fetch("https://ipapi.co/json/");
@@ -187,8 +189,8 @@ export default function MapScreen() {
     // Web fallback
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Mapa</Text>
-        <Text style={styles.subtitle}>Vista web usando OpenStreetMap.</Text>
+        <Text style={styles.title}>{t("map.title")}</Text>
+        <Text style={styles.subtitle}>{t("map.webFallback")}</Text>
         <iframe
           title="mapa-web"
           src="https://www.openstreetmap.org/export/embed.html?bbox=-74.15%2C4.56%2C-74.01%2C4.66&layer=mapnik&marker=4.6097%2C-74.0817"
@@ -201,9 +203,9 @@ export default function MapScreen() {
   if (!maptilerKey) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Falta MAPTILER KEY</Text>
+        <Text style={styles.title}>{t("map.missingKey")}</Text>
         <Text style={styles.subtitle}>
-          Define EXPO_PUBLIC_MAPTILER_KEY en .env y reinicia Metro.
+          {t("map.missingKeyDescription")}
         </Text>
       </View>
     );
@@ -214,7 +216,7 @@ export default function MapScreen() {
     return (
       <View style={[styles.container, styles.centered]}>
         <ActivityIndicator size="large" color={COLORS.textPrimary} />
-        <Text style={styles.subtitle}>Cargando mapa...</Text>
+        <Text style={styles.subtitle}>{t("map.loading")}</Text>
       </View>
     );
   }
@@ -229,7 +231,7 @@ export default function MapScreen() {
             style={styles.searchInput}
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder="Buscar dirección o lugar"
+            placeholder={t("map.searchPlaceholder")}
             placeholderTextColor={COLORS.tabInactive}
             returnKeyType="search"
             onSubmitEditing={onSearch}
@@ -245,12 +247,12 @@ export default function MapScreen() {
             contentContainerStyle={{ paddingVertical: 4 }}
           >
             {[
-              { label: 'Veterinarias', icon: 'medkit' },
-              { label: 'Pet Friendly', icon: 'heart' },
-              { label: 'Heladerías', icon: 'ice-cream' },
-              { label: 'Restaurantes', icon: 'restaurant' },
-              { label: 'Tiendas', icon: 'storefront' },
-              { label: 'Guarderías', icon: 'school' },
+              { label: t('map.filters.veterinaries'), icon: 'medkit' },
+              { label: t('map.filters.petFriendly'), icon: 'heart' },
+              { label: t('map.filters.iceCream'), icon: 'ice-cream' },
+              { label: t('map.filters.restaurants'), icon: 'restaurant' },
+              { label: t('map.filters.stores'), icon: 'storefront' },
+              { label: t('map.filters.daycares'), icon: 'school' },
             ].map(item => (
               <TouchableOpacity
                 key={item.label}

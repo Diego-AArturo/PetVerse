@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import {
   StyleSheet,
   Text,
@@ -19,6 +20,7 @@ import { registerWithEmail } from "../src/data/authService";
 
 export default function Register() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [showPass, setShowPass] = useState(false);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -29,7 +31,7 @@ export default function Register() {
   const handleRegister = async () => {
     setErrorMessage(null);
     if (!username || !email || !password) {
-      setErrorMessage("Completa todos los campos");
+      setErrorMessage(t("auth.register.errors.emptyFields"));
       return;
     }
     setIsLoading(true);
@@ -37,7 +39,7 @@ export default function Register() {
       await registerWithEmail({ name: username, email, password });
       router.replace("/tabs/home" as any); // rutas tipadas desactualizadas
     } catch (e: any) {
-      setErrorMessage(e?.message ?? "Error al registrar");
+      setErrorMessage(e?.message ?? t("auth.register.errors.registerFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -59,14 +61,14 @@ export default function Register() {
             style={styles.logoImage} />
           </View>
 
-          <Text style={styles.title}>PetVerse</Text>
-          <Text style={styles.subtitle}>Crea tu cuenta para empezar</Text>
+          <Text style={styles.title}>{t("common.appName")}</Text>
+          <Text style={styles.subtitle}>{t("auth.register.title")}</Text>
 
           <View style={styles.form}>
             <View style={styles.inputRow}>
               <Text style={styles.inputIcon}>👤</Text>
               <TextInput
-                placeholder="Nombre de usuario"
+                placeholder={t("auth.register.usernamePlaceholder")}
                 placeholderTextColor="#bfb7e6"
                 style={styles.textInput}
                 autoCapitalize="none"
@@ -78,7 +80,7 @@ export default function Register() {
             <View style={styles.inputRow}>
               <Text style={styles.inputIcon}>✉️</Text>
               <TextInput
-                placeholder="Email"
+                placeholder={t("auth.register.emailPlaceholder")}
                 placeholderTextColor="#bfb7e6"
                 style={styles.textInput}
                 keyboardType="email-address"
@@ -91,7 +93,7 @@ export default function Register() {
             <View style={styles.inputRow}>
               <Text style={styles.inputIcon}>🔒</Text>
               <TextInput
-                placeholder="Contraseña"
+                placeholder={t("auth.register.passwordPlaceholder")}
                 placeholderTextColor="#bfb7e6"
                 style={styles.textInput}
                 secureTextEntry={!showPass}
@@ -120,13 +122,13 @@ export default function Register() {
               {isLoading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.primaryButtonText}>Registrarse</Text>
+                <Text style={styles.primaryButtonText}>{t("auth.register.submitButton")}</Text>
               )}
             </TouchableOpacity>
 
             <View style={styles.orRow}>
               <View style={styles.line} />
-              <Text style={styles.orText}>O continúa con</Text>
+              <Text style={styles.orText}>{t("common.orContinueWith")}</Text>
               <View style={styles.line} />
             </View>
 
@@ -138,9 +140,9 @@ export default function Register() {
             /> */}
 
             <View style={styles.registerRow}>
-              <Text style={styles.smallText}>¿Ya tienes cuenta? </Text>
+              <Text style={styles.smallText}>{t("auth.register.hasAccount")} </Text>
               <Pressable onPress={() => router.push("/" as any)}>
-                <Text style={styles.registerLink}>Iniciar sesión</Text>
+                <Text style={styles.registerLink}>{t("auth.register.login")}</Text>
               </Pressable>
             </View>
           </View>

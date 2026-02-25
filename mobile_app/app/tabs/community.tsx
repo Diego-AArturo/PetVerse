@@ -1,13 +1,16 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { COLORS } from "../../src/Theme/colors";
 
 export default function CommunityScreen() {
+  const { t } = useTranslation();
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>Comunidad</Text>
-        <Text style={styles.subtitle}>Próximamente podrás ver el feed aquí.</Text>
+        <Text style={styles.title}>{t("community.title")}</Text>
+        <Text style={styles.subtitle}>{t("community.comingSoon")}</Text>
       </View>
     </SafeAreaView>
   );

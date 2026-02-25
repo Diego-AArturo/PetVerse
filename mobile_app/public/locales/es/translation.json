@@ -1,0 +1,156 @@
+{
+  "common": {
+    "appName": "PetVerse",
+    "loading": "Cargando...",
+    "retry": "Reintentar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "add": "Agregar",
+    "view": "Ver",
+    "viewAll": "Ver todo",
+    "copy": "Copiar",
+    "search": "Buscar",
+    "orContinueWith": "O continúa con",
+    "noSession": "No hay sesión activa"
+  },
+  "tabs": {
+    "home": "Inicio",
+    "pets": "Mascotas",
+    "community": "Comunidad",
+    "map": "Mapa",
+    "services": "Servicios"
+  },
+  "auth": {
+    "login": {
+      "title": "Inicia sesión para continuar",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Contraseña",
+      "submitButton": "Iniciar Sesión",
+      "submitting": "Ingresando...",
+      "noAccount": "¿No tienes cuenta?",
+      "register": "Regístrate",
+      "errors": {
+        "emptyFields": "Ingresa email y contraseña",
+        "loginFailed": "No se pudo iniciar sesión. Verifica tus datos."
+      }
+    },
+    "register": {
+      "title": "Crea tu cuenta para empezar",
+      "usernamePlaceholder": "Nombre de usuario",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Contraseña",
+      "submitButton": "Registrarse",
+      "hasAccount": "¿Ya tienes cuenta?",
+      "login": "Iniciar sesión",
+      "errors": {
+        "emptyFields": "Completa todos los campos",
+        "registerFailed": "Error al registrar"
+      }
+    }
+  },
+  "home": {
+    "greeting": "¡Buenos días! 👋",
+    "dashboard": "Panel",
+    "loadingProfile": "Cargando tu perfil...",
+    "noActiveSession": "No encontramos una sesión activa.",
+    "couldNotLoadInfo": "No se pudo obtener tu información.",
+    "pets": {
+      "addFirst": "Agrega tu primera mascota",
+      "keepVaccinesUpToDate": "Mantén al día las vacunas de {{name}}.",
+      "registerForReminders": "Registra una mascota para recibir recordatorios."
+    },
+    "stats": {
+      "health": "Salud",
+      "vaccines": "Vacunas",
+      "medication": "Medicación",
+      "lastVisit": "Última visita",
+      "weight": "Peso",
+      "species": "Especie"
+    },
+    "upcoming": {
+      "title": "Próximos",
+      "empty": "Aún no tienes recordatorios. Añade vacunas o citas."
+    },
+    "aiAssistant": {
+      "title": "Asistente IA",
+      "subtitle": "Pregunta sobre {{name}}",
+      "subtitleDefault": "Pregunta sobre tu mascota",
+      "placeholder": "¿Qué debería comer hoy {{name}}?",
+      "placeholderDefault": "¿Qué debería comer hoy mi mascota?"
+    }
+  },
+  "community": {
+    "title": "Comunidad",
+    "comingSoon": "Próximamente podrás ver el feed aquí."
+  },
+  "map": {
+    "title": "Mapa",
+    "webFallback": "Vista web usando OpenStreetMap.",
+    "missingKey": "Falta MAPTILER KEY",
+    "missingKeyDescription": "Define EXPO_PUBLIC_MAPTILER_KEY en .env y reinicia Metro.",
+    "loading": "Cargando mapa...",
+    "searchPlaceholder": "Buscar dirección o lugar",
+    "errors": {
+      "locationDenied": "Permiso de ubicación denegado",
+      "locationError": "Error al obtener ubicación"
+    },
+    "filters": {
+      "veterinaries": "Veterinarias",
+      "petFriendly": "Pet Friendly",
+      "iceCream": "Heladerías",
+      "restaurants": "Restaurantes",
+      "stores": "Tiendas",
+      "daycares": "Guarderías"
+    }
+  },
+  "services": {
+    "title": "Servicios",
+    "comingSoon": "Próximamente podrás reservar grooming, veterinario y más."
+  },
+  "profile": {
+    "title": "Perfil de Mascota",
+    "loading": "Cargando perfil...",
+    "defaultUser": "Usuario",
+    "noPet": "Sin mascota",
+    "errors": {
+      "couldNotLoad": "No se pudo cargar tu información",
+      "requiredFields": "Nombre y especie son obligatorios",
+      "couldNotSavePet": "No se pudo guardar la mascota",
+      "galleryPermission": "Se requiere permiso de galería",
+      "couldNotSaveImage": "No se pudo guardar la imagen"
+    },
+    "stats": {
+      "weight": "Peso",
+      "vaccines": "Vacunas",
+      "meds": "Meds",
+      "age": "Edad"
+    },
+    "microchip": {
+      "label": "Microchip",
+      "notRegistered": "No registrado"
+    },
+    "menu": {
+      "medicalHistory": "Historial médico",
+      "vaccineCard": "Carnet de vacunas",
+      "timeline": "Línea de tiempo",
+      "gallery": "Galería"
+    },
+    "wellness": {
+      "label": "Índice de bienestar",
+      "excellent": "Estado excelente"
+    },
+    "form": {
+      "editTitle": "Editar mascota",
+      "createTitle": "Nueva mascota",
+      "namePlaceholder": "Nombre",
+      "speciesPlaceholder": "Especie",
+      "breedPlaceholder": "Raza (opcional)",
+      "weightPlaceholder": "Peso en kg (opcional)",
+      "sexPlaceholder": "Sexo (opcional)",
+      "saveChanges": "Guardar cambios",
+      "createPet": "Crear mascota"
+    }
+  }
+}

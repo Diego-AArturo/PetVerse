@@ -1,6 +1,7 @@
 // import { useEffect } from "react";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { loginWithEmail } from "../src/data/authService";
 // import * as Google from "expo-auth-session/providers/google";
 // import * as WebBrowser from "expo-web-browser";
@@ -24,6 +25,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Login() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -52,7 +54,7 @@ export default function Login() {
   const handleLogin = async () => {
     setErrorMessage(null);
     if (!email || !password) {
-      setErrorMessage("Ingresa email y contraseña");
+      setErrorMessage(t("auth.login.errors.emptyFields"));
       return;
     }
     setIsLoading(true);
@@ -61,7 +63,7 @@ export default function Login() {
       router.replace("/tabs/home" as any);
     } catch (err: any) {
       const message =
-        err?.message ?? "No se pudo iniciar sesión. Verifica tus datos.";
+        err?.message ?? t("auth.login.errors.loginFailed");
       setErrorMessage(message);
     } finally {
       setIsLoading(false);
@@ -85,14 +87,14 @@ export default function Login() {
             />
           </View>
 
-          <Text style={styles.title}>PetVerse</Text>
-          <Text style={styles.subtitle}>Inicia sesión para continuar</Text>
+          <Text style={styles.title}>{t("common.appName")}</Text>
+          <Text style={styles.subtitle}>{t("auth.login.title")}</Text>
 
           <View style={styles.form}>
             <View style={styles.inputRow}>
               <Text style={styles.inputIcon}>✉️</Text>
               <TextInput
-                placeholder="Email"
+                placeholder={t("auth.login.emailPlaceholder")}
                 placeholderTextColor="#bfb7e6"
                 style={styles.textInput}
                 keyboardType="email-address"
@@ -105,7 +107,7 @@ export default function Login() {
             <View style={styles.inputRow}>
               <Text style={styles.inputIcon}>🔒</Text>
               <TextInput
-                placeholder="Contraseña"
+                placeholder={t("auth.login.passwordPlaceholder")}
                 placeholderTextColor="#bfb7e6"
                 style={styles.textInput}
                 secureTextEntry={!showPass}
@@ -131,13 +133,13 @@ export default function Login() {
               disabled={isLoading}
             >
               <Text style={styles.primaryButtonText}>
-                {isLoading ? "Ingresando..." : "Iniciar Sesión"}
+                {isLoading ? t("auth.login.submitting") : t("auth.login.submitButton")}
               </Text>
             </TouchableOpacity>
 
             <View style={styles.orRow}>
               <View style={styles.line} />
-              <Text style={styles.orText}>O continúa con</Text>
+              <Text style={styles.orText}>{t("common.orContinueWith")}</Text>
               <View style={styles.line} />
             </View>
 
@@ -151,9 +153,9 @@ export default function Login() {
             </TouchableOpacity> */}
 
             <View style={styles.registerRow}>
-              <Text style={styles.smallText}>¿No tienes cuenta? </Text>
+              <Text style={styles.smallText}>{t("auth.login.noAccount")} </Text>
               <Pressable onPress={() => router.push("/register")}>
-                <Text style={styles.registerLink}>Regístrate</Text>
+                <Text style={styles.registerLink}>{t("auth.login.register")}</Text>
               </Pressable>
             </View>
           </View>

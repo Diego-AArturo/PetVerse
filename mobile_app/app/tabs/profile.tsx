@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { COLORS } from "../../src/Theme/colors";
 import { getTokens } from "../../src/data/tokenStorage";
 import { fetchMyProfile } from "../../src/data/userService";
@@ -45,6 +46,7 @@ const emptyForm: FormState = {
 };
 
 export default function ProfileTab() {
+  const { t } = useTranslation();
   const [pets, setPets] = useState<PetSummary[]>([]);
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [profileName, setProfileName] = useState<string | null>(null);
@@ -69,21 +71,21 @@ export default function ProfileTab() {
       setError(null);
       try {
         const tokens = await getTokens();
-        if (!tokens) throw new Error("No hay sesión activa");
+        if (!tokens) throw new Error(t("common.noSession"));
         setToken(tokens.access_token);
         const me = await fetchMyProfile(tokens.access_token);
-        setProfileName(me.name ?? "Usuario");
+        setProfileName(me.name ?? t("profile.defaultUser"));
         const petList = await listPets(tokens.access_token);
         setPets(petList);
         setSelectedPetId(petList[0]?.id ?? null);
       } catch (e: any) {
-        setError(e?.message ?? "No se pudo cargar tu información");
+        setError(e?.message ?? t("profile.errors.couldNotLoad"));
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (params.add === "1") {
@@ -113,7 +115,7 @@ export default function ProfileTab() {
   const savePet = async () => {
     if (!token) return;
     if (!form.name || !form.species) {
-      setError("Nombre y especie son obligatorios");
+      setError(t("profile.errors.requiredFields"));
       return;
     }
     setSaving(true);
@@ -141,7 +143,7 @@ export default function ProfileTab() {
       setEditingPet(null);
       setForm(emptyForm);
     } catch (e: any) {
-      setError(e?.message ?? "No se pudo guardar la mascota");
+      setError(e?.message ?? t("profile.errors.couldNotSavePet"));
     } finally {
       setSaving(false);
     }
@@ -151,7 +153,7 @@ export default function ProfileTab() {
     if (!token || !selectedPet) return;
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      setError("Se requiere permiso de galería");
+      setError(t("profile.errors.galleryPermission"));
       return;
     }
     const maybeMediaType = (ImagePicker as any).MediaType?.Images;
@@ -174,7 +176,7 @@ export default function ProfileTab() {
         prev.map((p) => (p.id === updated.id ? { ...p, avatar_url: localUri } : p))
       );
     } catch (e: any) {
-      setError(e?.message ?? "No se pudo guardar la imagen");
+      setError(e?.message ?? t("profile.errors.couldNotSaveImage"));
     } finally {
       setSaving(false);
     }
@@ -196,7 +198,7 @@ export default function ProfileTab() {
     return (
       <SafeAreaView style={[styles.container, styles.center]}>
         <ActivityIndicator color={COLORS.textPrimary} />
-        <Text style={styles.muted}>Cargando perfil...</Text>
+        <Text style={styles.muted}>{t("profile.loading")}</Text>
       </SafeAreaView>
     );
   }
@@ -207,7 +209,7 @@ export default function ProfileTab() {
         {/* Header */}
         <View style={styles.headerCard}>
           <View style={styles.topRow}>
-            <Text style={styles.headerTitle}>Perfil de Mascota</Text>
+            <Text style={styles.headerTitle}>{t("profile.title")}</Text>
             {selectedPet && (
               <TouchableOpacity
                 style={styles.editButton}
@@ -238,12 +240,12 @@ export default function ProfileTab() {
           </View>
 
           <View style={styles.petInfo}>
-            <Text style={styles.petName}>{selectedPet?.name ?? "Sin mascota"}</Text>
+            <Text style={styles.petName}>{selectedPet?.name ?? t("profile.noPet")}</Text>
             <Text style={styles.petBreed}>{selectedPet?.breed ?? selectedPet?.species ?? ""}</Text>
             <View style={styles.metaRow}>
               <Text style={styles.metaText}>{selectedPet?.sex ?? "—"}</Text>
               <View style={styles.metaDot} />
-              <Text style={styles.metaText}>Peso: {selectedPet?.weight ?? "—"} kg</Text>
+              <Text style={styles.metaText}>{t("profile.stats.weight")}: {selectedPet?.weight ?? "—"} kg</Text>
             </View>
           </View>
 
@@ -267,44 +269,44 @@ export default function ProfileTab() {
             })}
             <TouchableOpacity style={styles.addChip} onPress={openCreate}>
               <Ionicons name="add" size={16} color={COLORS.textPrimary} />
-              <Text style={styles.petChipText}>Agregar</Text>
+              <Text style={styles.petChipText}>{t("common.add")}</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>
 
         {/* Quick info */}
         <View style={styles.infoGrid}>
-          <InfoCard title="Peso" value={selectedPet?.weight ? `${selectedPet.weight} kg` : "—"} icon="scale-outline" />
-          <InfoCard title="Vacunas" value="—" icon="medkit-outline" highlight />
-          <InfoCard title="Meds" value="—" icon="pulse-outline" />
-          <InfoCard title="Edad" value="—" icon="time-outline" highlight />
+          <InfoCard title={t("profile.stats.weight")} value={selectedPet?.weight ? `${selectedPet.weight} kg` : "—"} icon="scale-outline" />
+          <InfoCard title={t("profile.stats.vaccines")} value="—" icon="medkit-outline" highlight />
+          <InfoCard title={t("profile.stats.meds")} value="—" icon="pulse-outline" />
+          <InfoCard title={t("profile.stats.age")} value="—" icon="time-outline" highlight />
         </View>
 
         {/* Microchip */}
         <View style={styles.chipCard}>
           <View>
-            <Text style={styles.chipLabel}>Microchip</Text>
-            <Text style={styles.chipValue}>No registrado</Text>
+            <Text style={styles.chipLabel}>{t("profile.microchip.label")}</Text>
+            <Text style={styles.chipValue}>{t("profile.microchip.notRegistered")}</Text>
           </View>
           <TouchableOpacity style={styles.copyButton}>
-            <Text style={styles.copyText}>Copiar</Text>
+            <Text style={styles.copyText}>{t("common.copy")}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Menú */}
         <View style={styles.menuList}>
-          <MenuItem label="Historial médico" icon="heart-outline" badge="3" />
-          <MenuItem label="Carnet de vacunas" icon="medkit-outline" />
-          <MenuItem label="Línea de tiempo" icon="time-outline" />
-          <MenuItem label="Galería" icon="images-outline" badge="24" />
+          <MenuItem label={t("profile.menu.medicalHistory")} icon="heart-outline" badge="3" />
+          <MenuItem label={t("profile.menu.vaccineCard")} icon="medkit-outline" />
+          <MenuItem label={t("profile.menu.timeline")} icon="time-outline" />
+          <MenuItem label={t("profile.menu.gallery")} icon="images-outline" badge="24" />
         </View>
 
         {/* Wellness */}
         <View style={styles.wellnessCard}>
           <View>
-            <Text style={styles.wellnessLabel}>Índice de bienestar</Text>
+            <Text style={styles.wellnessLabel}>{t("profile.wellness.label")}</Text>
             <Text style={styles.wellnessScore}>92/100</Text>
-            <Text style={styles.wellnessHint}>Estado excelente</Text>
+            <Text style={styles.wellnessHint}>{t("profile.wellness.excellent")}</Text>
           </View>
           <View style={styles.wellnessCircle}>
             <Ionicons name="heart" size={32} color={COLORS.textPrimary} />
@@ -318,7 +320,7 @@ export default function ProfileTab() {
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                {editingPet ? "Editar mascota" : "Nueva mascota"}
+                {editingPet ? t("profile.form.editTitle") : t("profile.form.createTitle")}
               </Text>
               <Pressable onPress={() => setIsFormOpen(false)}>
                 <Ionicons name="close" size={22} color={COLORS.textPrimary} />
@@ -326,40 +328,40 @@ export default function ProfileTab() {
             </View>
 
             <TextInput
-              placeholder="Nombre"
+              placeholder={t("profile.form.namePlaceholder")}
               placeholderTextColor={COLORS.tabInactive}
               style={styles.input}
               value={form.name}
-              onChangeText={(t) => setForm((f) => ({ ...f, name: t }))}
+              onChangeText={(text) => setForm((f) => ({ ...f, name: text }))}
             />
             <TextInput
-              placeholder="Especie"
+              placeholder={t("profile.form.speciesPlaceholder")}
               placeholderTextColor={COLORS.tabInactive}
               style={styles.input}
               value={form.species}
-              onChangeText={(t) => setForm((f) => ({ ...f, species: t }))}
+              onChangeText={(text) => setForm((f) => ({ ...f, species: text }))}
             />
             <TextInput
-              placeholder="Raza (opcional)"
+              placeholder={t("profile.form.breedPlaceholder")}
               placeholderTextColor={COLORS.tabInactive}
               style={styles.input}
               value={form.breed}
-              onChangeText={(t) => setForm((f) => ({ ...f, breed: t }))}
+              onChangeText={(text) => setForm((f) => ({ ...f, breed: text }))}
             />
             <TextInput
-              placeholder="Peso en kg (opcional)"
+              placeholder={t("profile.form.weightPlaceholder")}
               placeholderTextColor={COLORS.tabInactive}
               style={styles.input}
               keyboardType="numeric"
               value={form.weight}
-              onChangeText={(t) => setForm((f) => ({ ...f, weight: t }))}
+              onChangeText={(text) => setForm((f) => ({ ...f, weight: text }))}
             />
             <TextInput
-              placeholder="Sexo (opcional)"
+              placeholder={t("profile.form.sexPlaceholder")}
               placeholderTextColor={COLORS.tabInactive}
               style={styles.input}
               value={form.sex}
-              onChangeText={(t) => setForm((f) => ({ ...f, sex: t }))}
+              onChangeText={(text) => setForm((f) => ({ ...f, sex: text }))}
             />
 
             <TouchableOpacity
@@ -371,7 +373,7 @@ export default function ProfileTab() {
                 <ActivityIndicator color={COLORS.textPrimary} />
               ) : (
                 <Text style={styles.saveText}>
-                  {editingPet ? "Guardar cambios" : "Crear mascota"}
+                  {editingPet ? t("profile.form.saveChanges") : t("profile.form.createPet")}
                 </Text>
               )}
             </TouchableOpacity>
