@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Keyboard,
   ScrollView,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -49,7 +50,24 @@ export default function MapScreen() {
   const [permissionGranted, setPermissionGranted] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const initRef = useRef(false);
+
+  // Manejar selección/deselección de filtros
+  const toggleFilter = useCallback((filterLabel: string) => {
+    setSelectedFilters(prev => {
+      if (prev.includes(filterLabel)) {
+        return prev.filter(f => f !== filterLabel);
+      } else {
+        return [...prev, filterLabel];
+      }
+    });
+  }, []);
+
+  // Limpiar todos los filtros
+  const clearAllFilters = useCallback(() => {
+    setSelectedFilters([]);
+  }, []);
 
   // función de búsqueda/geo-coding
   const onSearch = useCallback(async () => {
@@ -223,50 +241,86 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Overlay para cerrar dropdown */}
+      {showFilters && (
+        <TouchableWithoutFeedback onPress={() => setShowFilters(false)}>
+          <View style={styles.overlay} />
+        </TouchableWithoutFeedback>
+      )}
+      
       {/* search + filters section */}
       <View style={styles.searchWrapper}>
-        <View style={styles.searchContainer}>
-          <Text style={styles.searchIcon}>🔍</Text>
-          <TextInput
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder={t("map.searchPlaceholder")}
-            placeholderTextColor={COLORS.tabInactive}
-            returnKeyType="search"
-            onSubmitEditing={onSearch}
-            onFocus={() => setShowFilters(true)}
-            onBlur={() => setShowFilters(false)}
+        <TouchableOpacity
+          style={styles.searchContainer}
+          onPress={() => setShowFilters(!showFilters)}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="location-outline" size={20} color={COLORS.tabInactive} style={{ marginRight: 6 }} />
+          <Text style={styles.searchInputText}>
+            {searchQuery || t("map.searchPlaceholder")}
+          </Text>
+          <Ionicons 
+            name="search" 
+            size={20} 
+            color={COLORS.tabInactive} 
+            style={{ marginLeft: 'auto' }} 
           />
-        </View>
+        </TouchableOpacity>
+        
         {showFilters && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.filtersContainer}
-            contentContainerStyle={{ paddingVertical: 4 }}
-          >
+          <View style={styles.filtersDropdown}>
             {[
               { label: t('map.filters.veterinaries'), icon: 'medkit' },
-              { label: t('map.filters.petFriendly'), icon: 'heart' },
+              { label: t('map.filters.petFriendly'), icon: 'cafe' },
               { label: t('map.filters.iceCream'), icon: 'ice-cream' },
               { label: t('map.filters.restaurants'), icon: 'restaurant' },
-              { label: t('map.filters.stores'), icon: 'storefront' },
+              { label: t('map.filters.stores'), icon: 'bag-handle' },
               { label: t('map.filters.daycares'), icon: 'school' },
-            ].map(item => (
-              <TouchableOpacity
-                key={item.label}
-                style={styles.filterPill}
-                onPress={() => {
-                  setSearchQuery(item.label);
-                  onSearch();
-                }}
-              >
-                <Ionicons name={item.icon as any} size={14} color={COLORS.bgDark} />
-                <Text style={styles.filterText}>{item.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+            ].map(item => {
+              const isSelected = selectedFilters.includes(item.label);
+              return (
+                <TouchableOpacity
+                  key={item.label}
+                  style={[
+                    styles.filterItem,
+                    isSelected && styles.filterItemSelected
+                  ]}
+                  onPress={() => toggleFilter(item.label)}
+                >
+                  <View style={[
+                    styles.filterIcon,
+                    isSelected && styles.filterIconSelected
+                  ]}>
+                    <Ionicons 
+                      name={item.icon as any} 
+                      size={20} 
+                      color={isSelected ? COLORS.textPrimary : COLORS.tabInactive} 
+                    />
+                  </View>
+                  <Text style={styles.filterItemText}>{item.label}</Text>
+                  {isSelected && (
+                    <Ionicons 
+                      name="checkmark" 
+                      size={20} 
+                      color={COLORS.cardBlue} 
+                      style={{ marginLeft: 'auto' }} 
+                    />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+            
+            {selectedFilters.length > 0 && (
+              <View style={styles.filterFooter}>
+                <Text style={styles.filterCount}>
+                  {selectedFilters.length} {selectedFilters.length === 1 ? 'filtro activo' : 'filtros activos'}
+                </Text>
+                <TouchableOpacity onPress={clearAllFilters}>
+                  <Text style={styles.clearButton}>Limpiar todos</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
         )}
       </View>
       <MapLibreGL.MapView
@@ -312,49 +366,99 @@ const styles = StyleSheet.create({
   centered: { justifyContent: "center", alignItems: "center" },
   title: { color: COLORS.textPrimary, fontSize: 22, fontWeight: "800" },
   subtitle: { color: COLORS.textSecondary, marginTop: 6 },
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    zIndex: 5,
+  },
   searchWrapper: {
     position: "absolute",
     top: 60,
     left: 0,
     right: 0,
     zIndex: 10,
-    paddingHorizontal: 10,
+    paddingHorizontal: 16,
   },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: COLORS.textPrimary,
-    borderRadius: 20,
-    paddingHorizontal: 8,
-    height: 44,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 52,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  searchIcon: {
-    marginRight: 6,
-    fontSize: 18,
-    color: COLORS.tabInactive,
-  },
-  searchInput: {
+  searchInputText: {
     flex: 1,
-    fontSize: 14,
-    height: "100%",
+    fontSize: 16,
+    color: COLORS.bgDark,
   },
-  filtersContainer: {
-    flexDirection: "row",
-    marginTop: 8,
-  },
-  filterPill: {
+  filtersDropdown: {
     backgroundColor: COLORS.textPrimary,
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    marginRight: 8,
+    borderRadius: 12,
+    marginTop: 8,
+    paddingVertical: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+    maxHeight: 400,
+  },
+  filterItem: {
     flexDirection: "row",
     alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: COLORS.textPrimary,
   },
-  filterText: {
-    fontSize: 12,
+  filterItemSelected: {
+    backgroundColor: "#F0F0F0",
+  },
+  filterIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F5F5F5",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  filterIconSelected: {
+    backgroundColor: COLORS.bgDark,
+  },
+  filterItemText: {
+    fontSize: 16,
     color: COLORS.bgDark,
-    marginLeft: 4,
+    fontWeight: "500",
+  },
+  filterFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 4,
+    borderTopWidth: 1,
+    borderTopColor: "#E0E0E0",
+    marginTop: 8,
+  },
+  filterCount: {
+    fontSize: 14,
+    color: COLORS.tabInactive,
+  },
+  clearButton: {
+    fontSize: 14,
+    color: COLORS.cardBlue,
+    fontWeight: "600",
   },
   userMarker: {
     width: 24,
