@@ -331,8 +331,6 @@ export default function MapScreen() {
         onDidFailLoadingMap={(e: any) => logEvent("DidFailLoadingMap", e?.nativeEvent)}
         onMapError={(e: any) => logEvent("MapError", e?.nativeEvent)}
       >
-        {/* user location dot */}
-        <MapLibreGL.UserLocation visible={permissionGranted} />
         {/* RasterSource con tiles de MapTiler */}
         <MapLibreGL.RasterSource
           id="maptilerSource"
@@ -355,6 +353,16 @@ export default function MapScreen() {
           animationDuration={2000}
           followUserLocation={permissionGranted}
         />
+
+        {/* user location dot - debe ir después de Camera */}
+        {permissionGranted && (
+          <MapLibreGL.UserLocation
+            visible={true}
+            animated={true}
+            renderMode="native"
+            androidRenderMode="compass"
+          />
+        )}
 
       </MapLibreGL.MapView>
     </View>
