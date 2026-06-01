@@ -31,15 +31,10 @@ try {
   console.log("[Location] Native module not available");
 }
 
-// Estilo vacío minimal para evitar que cargue el estilo demo por defecto
-const EMPTY_STYLE = JSON.stringify({
-  version: 8,
-  sources: {},
-  layers: [],
-});
 
 // Coordenadas por defecto (Bogotá)
 const DEFAULT_COORDINATES: [number, number] = [-74.0817, 4.6097];
+
 
 export default function MapScreen() {
   const { t } = useTranslation();
@@ -90,9 +85,9 @@ export default function MapScreen() {
     Keyboard.dismiss();
   }, [maptilerKey, searchQuery]);
 
-  // URL de tiles raster de MapTiler
+  // Tiles raster estilo bright — fondo claro, calles blancas, aspecto limpio
   const tileURL = maptilerKey
-    ? `https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=${maptilerKey}`
+    ? `https://api.maptiler.com/maps/bright/{z}/{x}/{y}@2x.png?key=${maptilerKey}`
     : undefined;
 
   // Helpers to log rich info from native events.
@@ -140,10 +135,10 @@ export default function MapScreen() {
       logEvent("Config", {
         platform: Platform.OS,
         maptilerKey: maptilerKey?.slice(0, 4) + "***",
-        tileURL: tileURL?.replace(maptilerKey || "", "***"),
+        style: "vector/waze-inspired",
       });
     }
-  }, [isMapReady, maptilerKey, tileURL, logEvent]);
+  }, [isMapReady, maptilerKey, logEvent]);
 
   // Solicitar permisos de ubicación y obtener la posición actual
   useEffect(() => {
@@ -325,17 +320,16 @@ export default function MapScreen() {
       </View>
       <MapLibreGL.MapView
         style={{ flex: 1 }}
-        styleJSON={EMPTY_STYLE}
+        styleJSON={JSON.stringify({ version: 8, sources: {}, layers: [] })}
         logoEnabled={false}
         attributionEnabled={false}
         onDidFailLoadingMap={(e: any) => logEvent("DidFailLoadingMap", e?.nativeEvent)}
         onMapError={(e: any) => logEvent("MapError", e?.nativeEvent)}
       >
-        {/* RasterSource con tiles de MapTiler */}
         <MapLibreGL.RasterSource
           id="maptilerSource"
           tileUrlTemplates={[tileURL!]}
-          tileSize={256}
+          tileSize={512}
           minZoomLevel={0}
           maxZoomLevel={19}
         >
