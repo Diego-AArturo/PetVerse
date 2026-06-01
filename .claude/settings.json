@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/LENOVO/Documents/keiry/VOXL/Proyectos General/Petverse ideas frontend/PetVerse Diseño1/screens/**)",
+      "Read(//c/Users/LENOVO/Documents/keiry/VOXL/Proyectos General/Petverse ideas frontend/PetVerse Diseño1/components/**)",
+      "Read(//c/Users/LENOVO/Documents/keiry/VOXL/Proyectos General/Petverse ideas frontend/PetVerse Diseño1/**)"
+    ]
+  }
+}
