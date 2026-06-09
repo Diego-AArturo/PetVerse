@@ -3,30 +3,32 @@ import { LinearGradient } from "expo-linear-gradient";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import { COLORS } from "../../Theme/colors";
 
 type TabDef = {
   name: string;
   icon: keyof typeof Ionicons.glyphMap;
   activeIcon: keyof typeof Ionicons.glyphMap;
-  label: string;
+  labelKey: string;
   center?: boolean;
 };
 
 const TABS: TabDef[] = [
-  { name: "profile",   icon: "paw-outline",      activeIcon: "paw",      label: "Mascota"   },
-  { name: "community", icon: "people-outline",    activeIcon: "people",   label: "Comunidad" },
-  { name: "home",      icon: "home",              activeIcon: "home",     label: "",   center: true },
-  { name: "map",       icon: "map-outline",       activeIcon: "map",      label: "Mapa"      },
-  { name: "petia",     icon: "sparkles-outline",  activeIcon: "sparkles", label: "PetIA"     },
+  { name: "profile",   icon: "paw-outline",      activeIcon: "paw",      labelKey: "tabs.pets"       },
+  { name: "community", icon: "people-outline",    activeIcon: "people",   labelKey: "tabs.community"  },
+  { name: "home",      icon: "home",              activeIcon: "home",     labelKey: "",   center: true },
+  { name: "map",       icon: "map-outline",       activeIcon: "map",      labelKey: "tabs.map"        },
+  { name: "petia",     icon: "sparkles-outline",  activeIcon: "sparkles", labelKey: "tabs.petia"      },
 ];
 
 const BAR_H   = 64;
 const CTR_SZ  = 58;
-const CTR_RISE = 16; // px que el botón asoma sobre la barra
+const CTR_RISE = 16;
 
 export default function BottomNav({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   const press = (route: typeof state.routes[0], isActive: boolean) => () => {
     const ev = navigation.emit({ type: "tabPress", target: route.key, canPreventDefault: true });
@@ -39,41 +41,36 @@ export default function BottomNav({ state, navigation }: BottomTabBarProps) {
 
   return (
     <View style={[styles.wrapper, { paddingBottom: insets.bottom || 10 }]}>
-      {/* Barra de fondo */}
       <View style={styles.bar}>
-        {/* Tabs izquierdas */}
         {leftRoutes.map((route, i) => {
           const tab = TABS[i];
           const active = state.index === i;
           return (
             <TouchableOpacity key={route.key} onPress={press(route, active)} style={styles.tab} activeOpacity={0.75}>
-              <Ionicons name={active ? tab.activeIcon : tab.icon} size={22} color={active ? "#fff" : COLORS.tabInactive} />
-              <Text style={[styles.label, { color: active ? "#fff" : COLORS.tabInactive }]}>{tab.label}</Text>
+              <Ionicons name={active ? tab.activeIcon : tab.icon} size={22} color={active ? COLORS.primary : COLORS.tabInactive} />
+              <Text style={[styles.label, { color: active ? COLORS.primary : COLORS.tabInactive }]}>{t(tab.labelKey)}</Text>
             </TouchableOpacity>
           );
         })}
 
-        {/* Espacio central */}
         <View style={styles.centerGap} />
 
-        {/* Tabs derechas */}
         {rightRoutes.map((route, i) => {
           const tab = TABS[3 + i];
           const active = state.index === 3 + i;
           return (
             <TouchableOpacity key={route.key} onPress={press(route, active)} style={styles.tab} activeOpacity={0.75}>
-              <Ionicons name={active ? tab.activeIcon : tab.icon} size={22} color={active ? "#fff" : COLORS.tabInactive} />
-              <Text style={[styles.label, { color: active ? "#fff" : COLORS.tabInactive }]}>{tab.label}</Text>
+              <Ionicons name={active ? tab.activeIcon : tab.icon} size={22} color={active ? COLORS.primary : COLORS.tabInactive} />
+              <Text style={[styles.label, { color: active ? COLORS.primary : COLORS.tabInactive }]}>{t(tab.labelKey)}</Text>
             </TouchableOpacity>
           );
         })}
       </View>
 
-      {/* Botón central elevado — renderizado después para quedar encima */}
       <View style={styles.centerContainer} pointerEvents="box-none">
         <TouchableOpacity onPress={press(centerRoute, state.index === 2)} activeOpacity={0.85}>
           <LinearGradient
-            colors={["#E056C7", "#7B3FE4", "#4FC3F7"]}
+            colors={[COLORS.accentMagenta, COLORS.accentPurple, COLORS.accentCyan]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.centerBtn}
@@ -106,7 +103,7 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 14,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
+    borderColor: COLORS.borderFaint,
   },
 
   tab: {
@@ -144,7 +141,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 3,
     borderColor: COLORS.navBackground,
-    shadowColor: "#E056C7",
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.6,
     shadowRadius: 14,

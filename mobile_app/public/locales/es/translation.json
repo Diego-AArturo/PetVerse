@@ -10,17 +10,21 @@
     "add": "Agregar",
     "view": "Ver",
     "viewAll": "Ver todo",
+    "viewAllPlural": "Ver todos",
     "copy": "Copiar",
     "search": "Buscar",
     "orContinueWith": "O continúa con",
-    "noSession": "No hay sesión activa"
+    "noSession": "No hay sesión activa",
+    "filterActive": "filtro activo",
+    "filtersActive": "filtros activos",
+    "clearAll": "Limpiar todos"
   },
   "tabs": {
     "home": "Inicio",
-    "pets": "Mascotas",
+    "pets": "Mascota",
     "community": "Comunidad",
     "map": "Mapa",
-    "services": "Servicios"
+    "petia": "PetIA"
   },
   "auth": {
     "login": {
@@ -51,39 +55,205 @@
     }
   },
   "home": {
+    "tutorOf": "Hola, tutor de {{name}}",
+    "panelTitle": "Panel",
     "greeting": "¡Buenos días! 👋",
-    "dashboard": "Panel",
-    "loadingProfile": "Cargando tu perfil...",
+    "inShape": "En forma",
     "noActiveSession": "No encontramos una sesión activa.",
     "couldNotLoadInfo": "No se pudo obtener tu información.",
+    "stats": {
+      "health": "SALUD",
+      "vaccines": "VACUNAS",
+      "medication": "MEDICACIÓN",
+      "lastVisit": "ÚLTIMA VISITA",
+      "weightCurrent": "PESO ACTUAL",
+      "excellent": "Excelente",
+      "upToDate": "al día",
+      "pending": "pendiente",
+      "active": "activas",
+      "weightMonth": "+0.3 kg este mes"
+    },
+    "sections": {
+      "weight": "Peso",
+      "weightDetail": "Ver detalles",
+      "reminders": "Próximos recordatorios",
+      "remindersAll": "Ver todos",
+      "tipOfDay": "Consejo del día",
+      "moreTips": "Más tips",
+      "nearbyServices": "Servicios cerca",
+      "nearbyMap": "Mapa"
+    },
+    "aiCard": {
+      "label": "PetIA · recomendación",
+      "cta": "Hablar con PetIA →"
+    },
+    "services": {
+      "vet": "Vet",
+      "store": "Tienda",
+      "spa": "Spa",
+      "park": "Parque"
+    },
     "pets": {
       "addFirst": "Agrega tu primera mascota",
       "keepVaccinesUpToDate": "Mantén al día las vacunas de {{name}}.",
-      "registerForReminders": "Registra una mascota para recibir recordatorios."
+      "registerForReminders": "Registra una mascota para recibir recordatorios.",
+      "addChip": "Agregar"
+    }
+  },
+  "profile": {
+    "loading": "Cargando perfil...",
+    "subtitle": "HOJA DE VIDA DIGITAL",
+    "defaultTitle": "Mascotas",
+    "defaultUser": "Usuario",
+    "noPet": "Sin mascota",
+    "errors": {
+      "couldNotLoad": "No se pudo cargar tu información",
+      "requiredFields": "Nombre y especie son obligatorios",
+      "couldNotSavePet": "No se pudo guardar la mascota",
+      "galleryPermission": "Se requiere permiso de galería",
+      "couldNotSaveImage": "No se pudo guardar la imagen"
+    },
+    "meta": {
+      "birthday": "CUMPLE",
+      "species": "ESPECIE",
+      "sex": "SEXO"
+    },
+    "age": {
+      "months": "{{count}} meses",
+      "year": "{{count}} año",
+      "years": "{{count}} años"
+    },
+    "carnet": {
+      "subtitle": "SALUD",
+      "title": "Carnet digital",
+      "idLabel": "PETVERSE · ID",
+      "microchip": "Microchip",
+      "vaccinesLabel": "VACUNAS",
+      "vaccinesValue": "4/5 al día",
+      "issuedLabel": "EMITIDO",
+      "issuedValue": "2024 · CO",
+      "tabs": {
+        "vaccines": "Vacunas",
+        "medications": "Medicamentos",
+        "visits": "Visitas"
+      },
+      "vaccineItem": "Aplicada · {{date}} → Próxima · {{next}}",
+      "badge": {
+        "ok": "Al día",
+        "pending": "Próximo",
+        "overdue": "Atrasado"
+      }
+    },
+    "quickCards": {
+      "carnetTitle": "Carnet digital",
+      "carnetSub": "5 vacunas · Al día",
+      "albumTitle": "Álbum",
+      "albumSub": "48 fotos · 6 videos"
+    },
+    "growth": {
+      "title": "Crecimiento",
+      "action": "Ver todo",
+      "weightLabel": "Peso",
+      "weightBadge": "+0.3 kg"
+    },
+    "timeline": {
+      "title": "Línea de tiempo",
+      "action": "Ver todo"
+    },
+    "form": {
+      "editTitle": "Editar mascota",
+      "createTitle": "Agregar mascota",
+      "editSub": "Actualiza los datos de tu mascota.",
+      "createSub": "Crea el perfil digital de tu nueva mascota.",
+      "namePh": "Nombre *",
+      "speciesPh": "Especie * (ej. Perro, Gato)",
+      "breedPh": "Raza",
+      "weightPh": "Peso (kg)",
+      "sexPh": "Sexo (Macho / Hembra)",
+      "saveChanges": "Guardar cambios",
+      "createPet": "Crear mascota"
     },
     "stats": {
-      "health": "Salud",
-      "vaccines": "Vacunas",
-      "medication": "Medicación",
-      "lastVisit": "Última visita",
       "weight": "Peso",
-      "species": "Especie"
+      "vaccines": "Vacunas",
+      "meds": "Meds",
+      "age": "Edad"
     },
-    "upcoming": {
-      "title": "Próximos",
-      "empty": "Aún no tienes recordatorios. Añade vacunas o citas."
+    "microchip": {
+      "label": "Microchip",
+      "notRegistered": "No registrado"
     },
-    "aiAssistant": {
-      "title": "Asistente IA",
-      "subtitle": "Pregunta sobre {{name}}",
-      "subtitleDefault": "Pregunta sobre tu mascota",
-      "placeholder": "¿Qué debería comer hoy {{name}}?",
-      "placeholderDefault": "¿Qué debería comer hoy mi mascota?"
+    "menu": {
+      "medicalHistory": "Historial médico",
+      "vaccineCard": "Carnet de vacunas",
+      "timeline": "Línea de tiempo",
+      "gallery": "Galería"
+    },
+    "wellness": {
+      "label": "Índice de bienestar",
+      "excellent": "Estado excelente"
     }
   },
   "community": {
-    "title": "Comunidad",
-    "comingSoon": "Próximamente podrás ver el feed aquí."
+    "subtitle": "COMUNIDAD PETVERSE",
+    "title": "Feed",
+    "titleHighlight": "pet",
+    "comingSoon": "Próximamente podrás ver el feed aquí.",
+    "searchPlaceholder": "Buscar personas, mascotas, consejos…",
+    "searchCancel": "Cancelar",
+    "members": "miembros",
+    "readTime": "lectura",
+    "filters": {
+      "parati": "Para ti",
+      "consejos": "Consejos",
+      "todos": "Todos",
+      "miperfil": "Mi perfil"
+    },
+    "sections": {
+      "recommended": "Recomendado para ti",
+      "groupsForYou": "Grupos para ti",
+      "tipsTitle": "Consejos y guías",
+      "tipsBadge": "IA + usuarios",
+      "allPosts": "Todas las publicaciones",
+      "groups": "Grupos",
+      "myPosts": "Mis publicaciones",
+      "myTips": "Mis consejos"
+    },
+    "profile": {
+      "name": "Mi cuenta",
+      "bio": "Amante de los perros · Bogotá",
+      "editBtn": "Editar",
+      "newPost": "Nueva publicación",
+      "stats": {
+        "posts": "Publicaciones",
+        "followers": "Seguidores",
+        "following": "Siguiendo"
+      }
+    },
+    "empty": {
+      "noPostsIcon": "📝",
+      "noPostsTitle": "Aún no has publicado nada",
+      "noPostsSub": "Comparte momentos con tu mascota en la comunidad."
+    },
+    "search": {
+      "trends": "Tendencias",
+      "searchingFor": "Buscando \"{{query}}\"",
+      "backendNote": "Los resultados de búsqueda se conectarán al backend.",
+      "searchIcon": "🔍"
+    }
+  },
+  "petia": {
+    "subtitle": "ASISTENTE IA",
+    "title": "PetIA",
+    "online": "En línea · entrenada para {{species}}",
+    "placeholder": "Pregunta sobre {{name}}…",
+    "placeholderDefault": "Escribe tu pregunta…",
+    "suggestions": {
+      "walks": "¿Cuántas veces debo pasearlo al día?",
+      "fruit": "¿{{name}} puede comer fruta?",
+      "vaccines": "¿Qué vacunas le tocan ahora?",
+      "stress": "¿Cómo sé si está estresad@?"
+    }
   },
   "map": {
     "title": "Mapa",
@@ -108,49 +278,5 @@
   "services": {
     "title": "Servicios",
     "comingSoon": "Próximamente podrás reservar grooming, veterinario y más."
-  },
-  "profile": {
-    "title": "Perfil de Mascota",
-    "loading": "Cargando perfil...",
-    "defaultUser": "Usuario",
-    "noPet": "Sin mascota",
-    "errors": {
-      "couldNotLoad": "No se pudo cargar tu información",
-      "requiredFields": "Nombre y especie son obligatorios",
-      "couldNotSavePet": "No se pudo guardar la mascota",
-      "galleryPermission": "Se requiere permiso de galería",
-      "couldNotSaveImage": "No se pudo guardar la imagen"
-    },
-    "stats": {
-      "weight": "Peso",
-      "vaccines": "Vacunas",
-      "meds": "Meds",
-      "age": "Edad"
-    },
-    "microchip": {
-      "label": "Microchip",
-      "notRegistered": "No registrado"
-    },
-    "menu": {
-      "medicalHistory": "Historial médico",
-      "vaccineCard": "Carnet de vacunas",
-      "timeline": "Línea de tiempo",
-      "gallery": "Galería"
-    },
-    "wellness": {
-      "label": "Índice de bienestar",
-      "excellent": "Estado excelente"
-    },
-    "form": {
-      "editTitle": "Editar mascota",
-      "createTitle": "Nueva mascota",
-      "namePlaceholder": "Nombre",
-      "speciesPlaceholder": "Especie",
-      "breedPlaceholder": "Raza (opcional)",
-      "weightPlaceholder": "Peso en kg (opcional)",
-      "sexPlaceholder": "Sexo (opcional)",
-      "saveChanges": "Guardar cambios",
-      "createPet": "Crear mascota"
-    }
   }
 }

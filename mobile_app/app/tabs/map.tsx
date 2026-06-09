@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.textPrimary,
+    backgroundColor: COLORS.card,
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 52,
@@ -401,10 +401,10 @@ const styles = StyleSheet.create({
   searchInputText: {
     flex: 1,
     fontSize: 16,
-    color: COLORS.bgDark,
+    color: COLORS.textPrimary,
   },
   filtersDropdown: {
-    backgroundColor: COLORS.textPrimary,
+    backgroundColor: COLORS.card,
     borderRadius: 12,
     marginTop: 8,
     paddingVertical: 8,
@@ -420,10 +420,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: COLORS.textPrimary,
+    backgroundColor: COLORS.card,
   },
   filterItemSelected: {
-    backgroundColor: "#F0F0F0",
+    backgroundColor: COLORS.primaryLight,
   },
   filterIcon: {
     width: 40,
@@ -435,11 +435,11 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   filterIconSelected: {
-    backgroundColor: COLORS.bgDark,
+    backgroundColor: COLORS.primaryLight,
   },
   filterItemText: {
     fontSize: 16,
-    color: COLORS.bgDark,
+    color: COLORS.textPrimary,
     fontWeight: "500",
   },
   filterFooter: {

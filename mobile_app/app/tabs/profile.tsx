@@ -20,23 +20,21 @@ import * as ImagePicker from "expo-image-picker";
 import { API_BASE_URL } from "../../src/data/config";
 
 const { width: SW } = Dimensions.get("window");
-const MAG = "#E056C7";
-const PRP = "#7B3FE4";
-const CYN = "#4FC3F7";
-const GRN = "#3DDC97";
-const AMB = "#FFB547";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function petAge(birthdate?: string | null): string {
+function petAge(birthdate?: string | null, t?: (k: string, o?: any) => string): string {
   if (!birthdate) return "";
   const d = new Date(birthdate);
   const now = new Date();
   const years = now.getFullYear() - d.getFullYear();
   if (years === 0) {
-    const m = now.getMonth() - d.getMonth();
-    return `${m < 0 ? m + 12 : m} meses`;
+    const raw = now.getMonth() - d.getMonth();
+    const m = raw < 0 ? raw + 12 : raw;
+    return t ? t("profile.age.months", { count: m }) : `${m} meses`;
   }
-  return `${years} ${years === 1 ? "año" : "años"}`;
+  return t
+    ? t(years === 1 ? "profile.age.year" : "profile.age.years", { count: years })
+    : `${years} ${years === 1 ? "año" : "años"}`;
 }
 
 function fmtDate(birthdate?: string | null): string {
@@ -53,7 +51,7 @@ function petEmoji(species?: string | null): string {
 }
 
 // ── Sparkline sin SVG ─────────────────────────────────────────────────────────
-function Sparkline({ data, color = MAG, w, h = 90 }: { data: number[]; color?: string; w: number; h?: number }) {
+function Sparkline({ data, color = COLORS.primary, w, h = 90 }: { data: number[]; color?: string; w: number; h?: number }) {
   const min = Math.min(...data), max = Math.max(...data);
   const range = max - min || 1;
   const step = w / (data.length - 1);
@@ -91,54 +89,219 @@ function Sparkline({ data, color = MAG, w, h = 90 }: { data: number[]; color?: s
   );
 }
 
-// ── Encabezado de sección ─────────────────────────────────────────────────────
+// ── Sección header ─────────────────────────────────────────────────────────────
 function SecHeader({ title, action }: { title: string; action?: string }) {
   return (
-    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 18, marginBottom: 10 }}>
-      <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>{title}</Text>
-      {action && <Text style={{ fontSize: 13, color: MAG, fontWeight: "600" }}>{action}</Text>}
+    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 20, marginBottom: 12 }}>
+      <Text style={{ fontSize: 18, fontWeight: "800", color: COLORS.textPrimary }}>{title}</Text>
+      {action && <Text style={{ fontSize: 13, color: COLORS.primary, fontWeight: "600" }}>{action}</Text>}
     </View>
+  );
+}
+
+// ── Status badge (carnet) ──────────────────────────────────────────────────────
+type VaccineStatus = "ok" | "pending" | "overdue";
+function StatusBadge({ status }: { status: VaccineStatus }) {
+  const { t } = useTranslation();
+  const config = {
+    ok:      { bg: COLORS.statusOkBg,      color: COLORS.statusOkText,      labelKey: "profile.carnet.badge.ok"      },
+    pending: { bg: COLORS.statusPendingBg,  color: COLORS.statusPendingText,  labelKey: "profile.carnet.badge.pending"  },
+    overdue: { bg: COLORS.statusOverdueBg,  color: COLORS.statusOverdueText,  labelKey: "profile.carnet.badge.overdue"  },
+  }[status];
+  return (
+    <View style={{ paddingVertical: 5, paddingHorizontal: 10, borderRadius: 99, backgroundColor: config.bg }}>
+      <Text style={{ fontSize: 11, fontWeight: "700", color: config.color }}>● {t(config.labelKey)}</Text>
+    </View>
+  );
+}
+
+// ── QR placeholder ────────────────────────────────────────────────────────────
+function QRPlaceholder() {
+  return (
+    <View style={{ width: 56, height: 56, borderRadius: 8, backgroundColor: COLORS.card, padding: 5 }}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", width: 46, height: 46 }}>
+        {Array.from({ length: 64 }).map((_, i) => {
+          const x = i % 8, y = Math.floor(i / 8);
+          const filled = (x + y * 13) % 7 < 3;
+          return (
+            <View key={i} style={{ width: 5.75, height: 5.75, backgroundColor: filled ? COLORS.textPrimary : "transparent" }} />
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+// ── Data: vacunas, medicamentos, visitas ──────────────────────────────────────
+type Vacuna = { name: string; date: string; next: string; status: VaccineStatus };
+const VACUNAS: Vacuna[] = [
+  { name: "Polivalente (DHPP)", date: "12 Mar 2026", next: "12 Mar 2027", status: "ok"      },
+  { name: "Antirrábica",        date: "5 Feb 2026",  next: "5 Feb 2027",  status: "ok"      },
+  { name: "Bordetella",         date: "20 Ene 2026", next: "20 Jul 2026", status: "pending"  },
+  { name: "Leptospirosis",      date: "12 Mar 2026", next: "12 Mar 2027", status: "ok"      },
+  { name: "Giardia",            date: "15 Oct 2025", next: "15 Abr 2026", status: "overdue"  },
+];
+
+type Medicamento = { name: string; desc: string; next: string; color: string };
+const MEDICAMENTOS: Medicamento[] = [
+  { name: "Bravecto",          desc: "Antiparasitario · 1 cada 3 meses", next: "En 23 días", color: COLORS.accentAmber  },
+  { name: "Drontal",           desc: "Desparasitante · Mensual",         next: "En 8 días",  color: COLORS.timelineGreen },
+  { name: "Omega-3 articular", desc: "1 cápsula · diario",               next: "En 1 día",   color: COLORS.accentCyan   },
+];
+
+type Visita = { date: string; title: string; vet: string; clinic: string };
+const VISITAS: Visita[] = [
+  { date: "12 Mar 2026", title: "Control anual",           vet: "Dr. Patricia García", clinic: "VetCare Centro" },
+  { date: "5 Feb 2026",  title: "Antirrábica + revisión",  vet: "Dr. Patricia García", clinic: "VetCare Centro" },
+  { date: "8 Dic 2025",  title: "Limpieza dental",         vet: "Dr. Carlos M.",       clinic: "Pet Dental"     },
+];
+
+// ── Timeline data ─────────────────────────────────────────────────────────────
+type TimelineEv = { date: string; title: string; sub: string; emoji: string; color: string };
+const TIMELINE_DATA: TimelineEv[] = [
+  { date: "Hoy",         title: "Paseo de 45 min",            sub: "Parque El Virrey",         emoji: "🌳", color: COLORS.timelineGreen       },
+  { date: "Ayer",        title: "Vacuna polivalente aplicada", sub: "Dr. Patricia G.",          emoji: "💉", color: COLORS.timelineMustard     },
+  { date: "Hace 3 días", title: "Foto agregada al álbum",     sub: "Domingo en la playa",      emoji: "📸", color: COLORS.timelinePurpleLight  },
+  { date: "Hace 1 sem",  title: "Peso registrado · 12.4 kg",  sub: "+0.3 kg vs. mes anterior", emoji: "⚖️", color: COLORS.timelinePurple       },
+];
+
+const WEIGHT_DATA   = [10.2, 10.6, 11.0, 11.4, 11.8, 12.1, 12.4];
+const WEIGHT_LABELS = ["Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago"];
+
+// ── Carnet: tarjetas de ítem ──────────────────────────────────────────────────
+function VaccineCard({ v }: { v: Vacuna }) {
+  const { t } = useTranslation();
+  return (
+    <View style={cs.itemCard}>
+      <View style={cs.itemIcon}>
+        <Ionicons name="create-outline" size={20} color={COLORS.primary} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={cs.itemTitle}>{v.name}</Text>
+        <Text style={cs.itemSub}>{t("profile.carnet.vaccineItem", { date: v.date, next: v.next })}</Text>
+      </View>
+      <StatusBadge status={v.status} />
+    </View>
+  );
+}
+
+function MedCard({ m }: { m: Medicamento }) {
+  return (
+    <View style={cs.itemCard}>
+      <View style={[cs.itemIcon, { backgroundColor: m.color + "33" }]}>
+        <Ionicons name="flask-outline" size={20} color={m.color} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={cs.itemTitle}>{m.name}</Text>
+        <Text style={cs.itemSub}>{m.desc}</Text>
+      </View>
+      <View style={{ paddingVertical: 5, paddingHorizontal: 10, borderRadius: 99, backgroundColor: COLORS.statusPendingBg }}>
+        <Text style={{ fontSize: 11, fontWeight: "600", color: COLORS.statusPendingText }}>{m.next}</Text>
+      </View>
+    </View>
+  );
+}
+
+function VisitCard({ v }: { v: Visita }) {
+  return (
+    <View style={cs.itemCard}>
+      <View style={[cs.itemIcon, { backgroundColor: COLORS.bgAlt }]}>
+        <Ionicons name="medical-outline" size={20} color={COLORS.primary} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={[cs.itemSub, { marginBottom: 3, letterSpacing: 0.4 }]}>{v.date}</Text>
+        <Text style={cs.itemTitle}>{v.title}</Text>
+        <Text style={cs.itemSub}>{v.vet} · {v.clinic}</Text>
+      </View>
+    </View>
+  );
+}
+
+// ── CarnetView (pantalla completa) ────────────────────────────────────────────
+function CarnetView({ pet, onBack }: { pet: PetSummary | undefined; onBack: () => void }) {
+  const { t } = useTranslation();
+  const [tab, setTab] = useState<"vacunas" | "medicamentos" | "visitas">("vacunas");
+  const emoji = petEmoji(pet?.species);
+
+  const tabDefs = [
+    { id: "vacunas" as const,       labelKey: "profile.carnet.tabs.vaccines"     },
+    { id: "medicamentos" as const,  labelKey: "profile.carnet.tabs.medications"  },
+    { id: "visitas" as const,       labelKey: "profile.carnet.tabs.visits"       },
+  ];
+
+  return (
+    <SafeAreaView style={cs.root} edges={["top"]}>
+      {/* Header */}
+      <View style={cs.header}>
+        <TouchableOpacity style={cs.backBtn} onPress={onBack} activeOpacity={0.8}>
+          <Ionicons name="arrow-back" size={20} color={COLORS.textPrimary} />
+        </TouchableOpacity>
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text style={cs.headerSub}>{t("profile.carnet.subtitle")}</Text>
+          <Text style={cs.headerTitle}>{t("profile.carnet.title")}</Text>
+        </View>
+        <TouchableOpacity style={cs.addBtn} activeOpacity={0.85}>
+          <Ionicons name="add" size={18} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      {/* ID Card */}
+      <View style={{ paddingHorizontal: 16, paddingBottom: 14 }}>
+        <View style={cs.idCard}>
+          <View style={{ position: "absolute", top: -20, right: -20, opacity: 0.1 }}>
+            <Ionicons name="paw" size={140} color="#fff" />
+          </View>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <View style={{ flex: 1 }}>
+              <Text style={cs.idLabel}>{t("profile.carnet.idLabel")}</Text>
+              <Text style={cs.idName}>{pet?.name ?? "Luna"}</Text>
+              <Text style={cs.idMicro}>{t("profile.carnet.microchip")} · 985 112 003 481 220</Text>
+            </View>
+            <View style={cs.idAvatar}>
+              <Text style={{ fontSize: 28 }}>{emoji}</Text>
+            </View>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 18, gap: 10 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={cs.idFieldLabel}>{t("profile.carnet.vaccinesLabel")}</Text>
+              <Text style={cs.idFieldValue}>{t("profile.carnet.vaccinesValue")}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={cs.idFieldLabel}>{t("profile.carnet.issuedLabel")}</Text>
+              <Text style={cs.idFieldValue}>{t("profile.carnet.issuedValue")}</Text>
+            </View>
+            <QRPlaceholder />
+          </View>
+        </View>
+      </View>
+
+      {/* Tabs */}
+      <View style={cs.tabsRow}>
+        {tabDefs.map(({ id, labelKey }) => (
+          <TouchableOpacity
+            key={id}
+            style={[cs.tabBtn, tab === id && cs.tabBtnActive]}
+            onPress={() => setTab(id)}
+            activeOpacity={0.85}
+          >
+            <Text style={[cs.tabTxt, tab === id && cs.tabTxtActive]}>{t(labelKey)}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Content */}
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+        {tab === "vacunas"      && VACUNAS.map((v, i)     => <VaccineCard key={i} v={v} />)}
+        {tab === "medicamentos" && MEDICAMENTOS.map((m, i) => <MedCard     key={i} m={m} />)}
+        {tab === "visitas"      && VISITAS.map((v, i)      => <VisitCard   key={i} v={v} />)}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 type FormState = { name: string; species: string; breed?: string; weight?: string; sex?: string };
 const emptyForm: FormState = { name: "", species: "", breed: "", weight: "", sex: "" };
-
-type IoniconName = keyof typeof Ionicons.glyphMap;
-type TimelineItem = { d: string; title: string; sub: string; icon: IoniconName; c: string };
-
-// ── Datos estáticos (placeholder hasta que el backend tenga estos endpoints) ──
-const VACUNAS = [
-  { n: "Antirrábica",         d: "12 mar 2025", status: "ok",      next: "12 mar 2026" },
-  { n: "Polivalente (DHPPi)", d: "05 feb 2025", status: "ok",      next: "05 feb 2026" },
-  { n: "Traqueobronquitis",   d: "15 abr 2025", status: "warn",    next: "15 oct 2025" },
-  { n: "Leishmaniasis",       d: "—",           status: "pending", next: "Programar"   },
-];
-const MEDS = [
-  { n: "NexGard Spectra",   dose: "28 kg · mensual",     color: CYN },
-  { n: "Omega-3 articular", dose: "1 cápsula · diario",  color: MAG },
-];
-const TIMELINE: TimelineItem[] = [
-  { d: "Hoy",    title: "Paseo de 45 min",             sub: "Parque de la 93",         icon: "compass-outline",   c: CYN },
-  { d: "Ayer",   title: "Sesión de juego",              sub: "Pelota de olfato · 25 min", icon: "heart-outline",   c: MAG },
-  { d: "15 abr", title: "Vacuna traqueobronquitis",     sub: "Clínica Patitas Felices",   icon: "medkit-outline",  c: GRN },
-  { d: "10 abr", title: "Baño y corte",                 sub: "PetSpa Chapinero",         icon: "sparkles-outline", c: PRP },
-  { d: "02 abr", title: "Control veterinario",          sub: "Todo en orden · 28.1 kg",  icon: "shield-outline",  c: AMB },
-  { d: "20 mar", title: "Adopción oficial",             sub: "Día 1 en PetVerse",        icon: "paw-outline",     c: MAG },
-];
-const WEIGHT_DATA   = [26.8, 27.2, 27.5, 27.9, 28.0, 28.2, 28.4];
-const WEIGHT_LABELS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul"];
-const ALBUM_LABELS  = ["Paseo", "Siesta", "Parque", "Con familia", "Cumpleaños", "Baño"];
-const ALBUM_GRADS: [string, string][] = [
-  [PRP, MAG], [MAG, CYN], [CYN, PRP], [PRP, MAG], [MAG, PRP], [CYN, MAG],
-];
-
-type InnerTab = "carnet" | "peso" | "timeline" | "album";
-const INNER_TABS: InnerTab[] = ["carnet", "peso", "timeline", "album"];
-const INNER_TAB_LABELS: Record<InnerTab, string> = {
-  carnet: "Carnet", peso: "Peso", timeline: "Timeline", album: "Álbum",
-};
 
 // ─────────────────────────────────────────────────────────────────────────────
 export default function ProfileTab() {
@@ -152,7 +315,7 @@ export default function ProfileTab() {
   const [editingPet, setEditingPet]       = useState<PetSummary | null>(null);
   const [form, setForm]                   = useState<FormState>(emptyForm);
   const [saving, setSaving]               = useState(false);
-  const [innerTab, setInnerTab]           = useState<InnerTab>("carnet");
+  const [view, setView]                   = useState<"profile" | "carnet">("profile");
   const params = useLocalSearchParams();
   const router = useRouter();
 
@@ -255,16 +418,28 @@ export default function ProfileTab() {
   if (loading) {
     return (
       <SafeAreaView style={[s.root, { justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator color={MAG} size="large" />
+        <ActivityIndicator color={COLORS.primary} size="large" />
         <Text style={{ color: COLORS.textSecondary, marginTop: 12 }}>{t("profile.loading")}</Text>
       </SafeAreaView>
     );
   }
 
+  if (view === "carnet") {
+    return <CarnetView pet={selectedPet} onBack={() => setView("profile")} />;
+  }
+
   const pet = selectedPet;
   const avatarUri = resolveAvatarUrl(pet?.avatar_url);
   const emoji = petEmoji(pet?.species);
-  const ageStr = petAge(pet?.birthdate);
+  const ageStr = petAge(pet?.birthdate, t);
+
+  const formFields = [
+    { key: "name" as const,    ph: t("profile.form.namePh"),    kb: undefined          },
+    { key: "species" as const, ph: t("profile.form.speciesPh"), kb: undefined          },
+    { key: "breed" as const,   ph: t("profile.form.breedPh"),   kb: undefined          },
+    { key: "weight" as const,  ph: t("profile.form.weightPh"),  kb: "numeric" as const },
+    { key: "sex" as const,     ph: t("profile.form.sexPh"),     kb: undefined          },
+  ];
 
   return (
     <SafeAreaView style={s.root} edges={["top"]}>
@@ -276,39 +451,31 @@ export default function ProfileTab() {
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <View style={s.header}>
           <View style={{ flex: 1 }}>
-            <Text style={s.headerSub}>HOJA DE VIDA DIGITAL</Text>
-            <Text style={s.headerTitle}>{pet?.name ?? "Mascotas"}</Text>
+            <Text style={s.headerSub}>{t("profile.subtitle")}</Text>
+            <Text style={s.headerTitle}>{pet?.name ?? t("profile.defaultTitle")}</Text>
           </View>
           <TouchableOpacity style={s.iconBtn} onPress={openCreate} activeOpacity={0.75}>
-            <Ionicons name="add" size={18} color="#fff" />
+            <Ionicons name="add" size={18} color={COLORS.textPrimary} />
           </TouchableOpacity>
           <TouchableOpacity style={[s.iconBtn, { marginLeft: 6 }]} onPress={() => pet && openEdit(pet)} activeOpacity={0.75}>
-            <Ionicons name="ellipsis-horizontal" size={18} color="#fff" />
+            <Ionicons name="ellipsis-horizontal" size={18} color={COLORS.textPrimary} />
           </TouchableOpacity>
         </View>
 
-        {/* ── Pet switcher (>1 mascota) ────────────────────────────────────── */}
+        {/* ── Pet switcher ────────────────────────────────────────────────── */}
         {pets.length > 1 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={s.switcherRow}
-            style={{ marginBottom: 14 }}
-          >
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}
+            contentContainerStyle={s.switcherRow} style={{ marginBottom: 14 }}>
             {pets.map(p => {
               const active = p.id === selectedPet?.id;
               return (
-                <TouchableOpacity
-                  key={p.id}
-                  onPress={() => setSelectedPetId(p.id)}
-                  style={[s.switchChip, active && s.switchChipActive]}
-                  activeOpacity={0.75}
-                >
+                <TouchableOpacity key={p.id} onPress={() => setSelectedPetId(p.id)}
+                  style={[s.switchChip, active && s.switchChipActive]} activeOpacity={0.75}>
                   {active && (
-                    <LinearGradient colors={[MAG, PRP]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.switchDot} />
+                    <LinearGradient colors={[COLORS.accentMagenta, COLORS.accentPurple]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.switchDot} />
                   )}
                   {!active && <View style={[s.switchDot, { backgroundColor: COLORS.tabInactive }]} />}
-                  <Text style={[s.switchChipTxt, active && { color: "#fff" }]}>{p.name}</Text>
+                  <Text style={[s.switchChipTxt, active && { color: COLORS.primary }]}>{p.name}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -317,229 +484,121 @@ export default function ProfileTab() {
 
         {/* ── Hero card con borde gradiente ───────────────────────────────── */}
         <LinearGradient
-          colors={[MAG, PRP, CYN, MAG]}
+          colors={[COLORS.accentMagenta, COLORS.accentPurple, COLORS.accentCyan, COLORS.accentMagenta]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={s.heroGrad}
         >
           <View style={s.heroInner}>
-            {/* Avatar + datos */}
             <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-              {/* Avatar */}
               <View>
                 {avatarUri ? (
                   <Image source={{ uri: avatarUri }} style={s.avatar} />
                 ) : (
-                  <LinearGradient
-                    colors={[MAG, PRP]}
-                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                    style={s.avatarFallback}
-                  >
+                  <LinearGradient colors={[COLORS.accentMagenta, COLORS.accentPurple]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.avatarFallback}>
                     <Text style={{ fontSize: 34 }}>{emoji}</Text>
                   </LinearGradient>
                 )}
                 <TouchableOpacity style={s.cameraBtn} onPress={changeAvatar} activeOpacity={0.85}>
-                  <Ionicons name="camera" size={13} color="#0A0520" />
+                  <Ionicons name="camera" size={13} color={COLORS.card} />
                 </TouchableOpacity>
               </View>
 
-              {/* Nombre, raza, chips */}
               <View style={{ flex: 1 }}>
                 <Text style={s.heroName}>{pet?.name ?? "—"}</Text>
                 <Text style={s.heroBreed}>{pet?.breed ?? pet?.species ?? "—"}</Text>
                 <View style={{ flexDirection: "row", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
-                  {pet?.sex     && <View style={s.chip}><Text style={s.chipTxt}>{pet.sex}</Text></View>}
-                  {ageStr       && <View style={s.chip}><Text style={s.chipTxt}>{ageStr}</Text></View>}
-                  {pet?.weight  && <View style={s.chip}><Text style={s.chipTxt}>{pet.weight} kg</Text></View>}
+                  {pet?.sex    && <View style={s.chip}><Text style={s.chipTxt}>{pet.sex}</Text></View>}
+                  {ageStr      && <View style={s.chip}><Text style={s.chipTxt}>{ageStr}</Text></View>}
+                  {pet?.weight && <View style={s.chip}><Text style={s.chipTxt}>{pet.weight} kg</Text></View>}
                 </View>
               </View>
             </View>
 
-            {/* Fila de datos: CUMPLE | ESPECIE | SEXO */}
             <View style={s.metaRow}>
               <View style={s.metaCell}>
-                <Text style={s.metaLabel}>CUMPLE</Text>
+                <Text style={s.metaLabel}>{t("profile.meta.birthday")}</Text>
                 <Text style={s.metaValue}>{fmtDate(pet?.birthdate)}</Text>
               </View>
               <View style={s.metaDivider} />
               <View style={s.metaCell}>
-                <Text style={s.metaLabel}>ESPECIE</Text>
+                <Text style={s.metaLabel}>{t("profile.meta.species")}</Text>
                 <Text style={s.metaValue}>{pet?.species ?? "—"}</Text>
               </View>
               <View style={s.metaDivider} />
               <View style={s.metaCell}>
-                <Text style={s.metaLabel}>SEXO</Text>
+                <Text style={s.metaLabel}>{t("profile.meta.sex")}</Text>
                 <Text style={s.metaValue}>{pet?.sex ?? "—"}</Text>
               </View>
             </View>
           </View>
         </LinearGradient>
 
-        {/* ── Tabs internos ────────────────────────────────────────────────── */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={s.innerTabsRow}
-        >
-          {INNER_TABS.map(tabId => (
-            <TouchableOpacity
-              key={tabId}
-              onPress={() => setInnerTab(tabId)}
-              style={{ borderRadius: 99, overflow: "hidden" }}
-              activeOpacity={0.75}
-            >
-              {innerTab === tabId ? (
-                <LinearGradient
-                  colors={[MAG, PRP]}
-                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                  style={s.innerTabActive}
-                >
-                  <Text style={[s.innerTabTxt, { color: "#fff" }]}>{INNER_TAB_LABELS[tabId]}</Text>
-                </LinearGradient>
-              ) : (
-                <View style={s.innerTabInactive}>
-                  <Text style={s.innerTabTxt}>{INNER_TAB_LABELS[tabId]}</Text>
+        {/* ── Quick cards: Carnet digital + Álbum ────────────────────────── */}
+        <View style={s.quickGrid}>
+          <TouchableOpacity style={s.quickCard} onPress={() => setView("carnet")} activeOpacity={0.85}>
+            <View style={s.quickIcon}>
+              <Ionicons name="document-text-outline" size={20} color={COLORS.primary} />
+            </View>
+            <Text style={s.quickTitle}>{t("profile.quickCards.carnetTitle")}</Text>
+            <Text style={s.quickSub}>{t("profile.quickCards.carnetSub")}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={s.quickCard} activeOpacity={0.85}>
+            <View style={[s.quickIcon, { backgroundColor: COLORS.bgAlt }]}>
+              <Ionicons name="images-outline" size={20} color={COLORS.primary} />
+            </View>
+            <Text style={s.quickTitle}>{t("profile.quickCards.albumTitle")}</Text>
+            <Text style={s.quickSub}>{t("profile.quickCards.albumSub")}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* ── Crecimiento ─────────────────────────────────────────────────── */}
+        <SecHeader title={t("profile.growth.title")} action={t("profile.growth.action")} />
+        <View style={s.growthCard}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 12 }}>
+            <View>
+              <Text style={s.growthLabel}>{t("profile.growth.weightLabel")}</Text>
+              <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4 }}>
+                <Text style={s.growthVal}>{pet?.weight ?? "12.4"}</Text>
+                <Text style={s.growthUnit}>kg</Text>
+              </View>
+            </View>
+            <View style={s.growthBadge}>
+              <Ionicons name="trending-up" size={11} color={COLORS.statusOkText} />
+              <Text style={s.growthBadgeTxt}>{t("profile.growth.weightBadge")}</Text>
+            </View>
+          </View>
+          <Sparkline data={WEIGHT_DATA} color={COLORS.primary} w={SW - 80} h={90} />
+          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 8 }}>
+            {WEIGHT_LABELS.map(l => <Text key={l} style={s.growthAxisLbl}>{l}</Text>)}
+          </View>
+        </View>
+
+        {/* ── Línea de tiempo ─────────────────────────────────────────────── */}
+        <SecHeader title={t("profile.timeline.title")} action={t("profile.timeline.action")} />
+        <View style={{ paddingBottom: 8 }}>
+          {TIMELINE_DATA.map((ev, i) => (
+            <View key={i} style={s.tlRow}>
+              <View style={{ alignItems: "center" }}>
+                <View style={[s.tlCircle, { backgroundColor: ev.color }]}>
+                  <Text style={{ fontSize: 17 }}>{ev.emoji}</Text>
                 </View>
-              )}
-            </TouchableOpacity>
+                {i < TIMELINE_DATA.length - 1 && (
+                  <View style={{ width: 2, flex: 1, backgroundColor: COLORS.borderFaint, marginTop: 4 }} />
+                )}
+              </View>
+              <View style={{ flex: 1, paddingBottom: 14 }}>
+                <Text style={s.tlDate}>{ev.date}</Text>
+                <Text style={s.tlTitle}>{ev.title}</Text>
+                <Text style={s.tlDesc}>{ev.sub}</Text>
+              </View>
+            </View>
           ))}
-        </ScrollView>
-
-        {/* ── CARNET ───────────────────────────────────────────────────────── */}
-        {innerTab === "carnet" && (
-          <View>
-            <SecHeader title="Vacunas" action="+ Añadir" />
-            {VACUNAS.map(v => {
-              const ok = v.status === "ok";
-              const warn = v.status === "warn";
-              const iconColor = ok ? GRN : (warn ? AMB : AMB);
-              return (
-                <View key={v.n} style={s.card}>
-                  <View style={[s.cardIcon, {
-                    backgroundColor: ok ? `${GRN}22` : `${AMB}22`,
-                    borderColor:     ok ? `${GRN}55` : `${AMB}55`,
-                  }]}>
-                    <Ionicons name="medkit" size={18} color={iconColor} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.cardTitle}>{v.n}</Text>
-                    <Text style={s.cardSub}>Aplicada {v.d}</Text>
-                  </View>
-                  <View style={{ alignItems: "flex-end" }}>
-                    <Text style={s.nextLabel}>PRÓX.</Text>
-                    <Text style={[s.nextValue, v.status === "pending" && { color: AMB }]}>
-                      {v.next}
-                    </Text>
-                  </View>
-                </View>
-              );
-            })}
-
-            <SecHeader title="Medicamentos activos" />
-            {MEDS.map(m => (
-              <View key={m.n} style={s.card}>
-                <View style={[s.cardIcon, { backgroundColor: `${m.color}22`, borderColor: `${m.color}55` }]}>
-                  <Ionicons name="flask" size={18} color={m.color} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.cardTitle}>{m.n}</Text>
-                  <Text style={s.cardSub}>{m.dose}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* ── PESO ─────────────────────────────────────────────────────────── */}
-        {innerTab === "peso" && (
-          <View>
-            <SecHeader title="Peso" />
-            <View style={[s.card, { flexDirection: "column", alignItems: "flex-start" }]}>
-              <Text style={{ fontSize: 11, color: COLORS.tabInactive, textTransform: "uppercase", letterSpacing: 0.8, fontWeight: "600" }}>
-                Peso actual
-              </Text>
-              <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4, marginTop: 4 }}>
-                <Text style={{ fontSize: 40, fontWeight: "800", color: MAG }}>
-                  {pet?.weight ?? "—"}
-                </Text>
-                <Text style={{ fontSize: 16, color: COLORS.textSecondary }}>kg</Text>
-              </View>
-              <Text style={{ fontSize: 12, color: GRN, marginTop: 2 }}>
-                +1.6 kg últimos 6 meses · saludable
-              </Text>
-              <View style={{ marginTop: 16, width: "100%" }}>
-                <Sparkline data={WEIGHT_DATA} color={MAG} w={SW - 80} h={100} />
-              </View>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", width: "100%", marginTop: 8 }}>
-                {WEIGHT_LABELS.map(l => (
-                  <Text key={l} style={{ fontSize: 10, color: COLORS.tabInactive }}>{l}</Text>
-                ))}
-              </View>
-            </View>
-
-            <SecHeader title="Análisis" />
-            <View style={[s.card, { flexDirection: "column", alignItems: "flex-start" }]}>
-              <Text style={{ fontSize: 13, color: COLORS.textSecondary, lineHeight: 20 }}>
-                {pet?.name ?? "Tu mascota"} está dentro del rango saludable para su raza y especie.
-                Su ritmo de ganancia de peso es estable y consistente.
-              </Text>
-            </View>
-          </View>
-        )}
-
-        {/* ── TIMELINE ─────────────────────────────────────────────────────── */}
-        {innerTab === "timeline" && (
-          <View style={{ paddingTop: 8 }}>
-            {/* Línea vertical de la timeline */}
-            <View style={{
-              position: "absolute", left: 13, top: 12, bottom: 12,
-              width: 1.5, backgroundColor: `${MAG}40`,
-            }} />
-            {TIMELINE.map((ev, i) => (
-              <View key={i} style={{ flexDirection: "row", gap: 10, marginBottom: 12, alignItems: "flex-start" }}>
-                <View style={[s.tlIcon, { backgroundColor: `${ev.c}22`, borderColor: `${ev.c}99` }]}>
-                  <Ionicons name={ev.icon} size={13} color={ev.c} />
-                </View>
-                <View style={[s.card, { flex: 1, marginBottom: 0 }]}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.cardTitle}>{ev.title}</Text>
-                    <Text style={s.cardSub}>{ev.sub}</Text>
-                  </View>
-                  <Text style={s.nextLabel}>{ev.d.toUpperCase()}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* ── ÁLBUM ────────────────────────────────────────────────────────── */}
-        {innerTab === "album" && (
-          <View>
-            <SecHeader title="Álbum de fotos" />
-            <View style={s.albumGrid}>
-              {ALBUM_LABELS.map((label, i) => (
-                <LinearGradient
-                  key={i}
-                  colors={ALBUM_GRADS[i % ALBUM_GRADS.length]}
-                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                  style={s.albumCell}
-                >
-                  <Text style={s.albumLabel}>{label}</Text>
-                </LinearGradient>
-              ))}
-            </View>
-            <TouchableOpacity style={s.albumAdd} activeOpacity={0.75}>
-              <Ionicons name="add" size={16} color={COLORS.textSecondary} />
-              <Text style={{ color: COLORS.textSecondary, fontSize: 13, fontWeight: "600" }}>
-                Añadir foto o video
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        </View>
 
         {/* Error inline */}
         {error && (
-          <View style={{ backgroundColor: "rgba(255,107,107,0.1)", borderRadius: 12, padding: 12, marginTop: 10, borderWidth: 1, borderColor: "rgba(255,107,107,0.25)" }}>
-            <Text style={{ color: "#ff6b6b", fontSize: 13 }}>{error}</Text>
+          <View style={{ backgroundColor: COLORS.errorBg, borderRadius: 12, padding: 12, marginTop: 10, borderWidth: 1, borderColor: COLORS.errorBorder }}>
+            <Text style={{ color: COLORS.badgeRed, fontSize: 13 }}>{error}</Text>
           </View>
         )}
       </ScrollView>
@@ -551,27 +610,17 @@ export default function ProfileTab() {
             <View style={s.modalHandle} />
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
               <Text style={s.modalTitle}>
-                {editingPet ? "Editar mascota" : "Agregar mascota"}
+                {editingPet ? t("profile.form.editTitle") : t("profile.form.createTitle")}
               </Text>
               <Pressable onPress={() => setIsFormOpen(false)}>
-                <Ionicons name="close" size={22} color="#fff" />
+                <Ionicons name="close" size={22} color={COLORS.textPrimary} />
               </Pressable>
             </View>
             <Text style={{ fontSize: 12, color: COLORS.tabInactive, marginBottom: 14 }}>
-              {editingPet
-                ? "Actualiza los datos de tu mascota."
-                : "Crea el perfil digital de tu nueva mascota."}
+              {editingPet ? t("profile.form.editSub") : t("profile.form.createSub")}
             </Text>
 
-            {(
-              [
-                { key: "name",    ph: "Nombre *",                    kb: undefined          },
-                { key: "species", ph: "Especie * (ej. Perro, Gato)", kb: undefined          },
-                { key: "breed",   ph: "Raza",                        kb: undefined          },
-                { key: "weight",  ph: "Peso (kg)",                   kb: "numeric" as const },
-                { key: "sex",     ph: "Sexo (Macho / Hembra)",       kb: undefined          },
-              ] as const
-            ).map(field => (
+            {formFields.map(field => (
               <TextInput
                 key={field.key}
                 placeholder={field.ph}
@@ -583,18 +632,15 @@ export default function ProfileTab() {
               />
             ))}
 
-            {error && <Text style={{ color: "#ff6b6b", fontSize: 12, marginBottom: 6 }}>{error}</Text>}
+            {error && <Text style={{ color: COLORS.badgeRed, fontSize: 12, marginBottom: 6 }}>{error}</Text>}
 
             <TouchableOpacity onPress={savePet} disabled={saving} style={{ borderRadius: 99, overflow: "hidden", marginTop: 6 }}>
-              <LinearGradient
-                colors={[MAG, PRP]}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                style={{ paddingVertical: 14, alignItems: "center", borderRadius: 99 }}
-              >
+              <LinearGradient colors={[COLORS.accentMagenta, COLORS.accentPurple]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                style={{ paddingVertical: 14, alignItems: "center", borderRadius: 99 }}>
                 {saving
                   ? <ActivityIndicator color="#fff" />
                   : <Text style={{ color: "#fff", fontWeight: "800", fontSize: 15 }}>
-                      {editingPet ? "Guardar cambios" : "Crear mascota"}
+                      {editingPet ? t("profile.form.saveChanges") : t("profile.form.createPet")}
                     </Text>}
               </LinearGradient>
             </TouchableOpacity>
@@ -605,126 +651,186 @@ export default function ProfileTab() {
   );
 }
 
-// ── Estilos ───────────────────────────────────────────────────────────────────
+// ── Estilos principales ───────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  root:  { flex: 1, backgroundColor: COLORS.bgDark },
+  root:  { flex: 1, backgroundColor: COLORS.bg },
   scroll: { paddingHorizontal: 16, paddingBottom: 120 },
 
-  // Header
   header: { flexDirection: "row", alignItems: "center", paddingTop: 6, paddingBottom: 14 },
   headerSub: {
     fontSize: 11, color: COLORS.tabInactive,
     letterSpacing: 1, textTransform: "uppercase", fontWeight: "600",
   },
-  headerTitle: { fontSize: 26, fontWeight: "800", color: "#fff" },
+  headerTitle: { fontSize: 26, fontWeight: "800", color: COLORS.textPrimary },
   iconBtn: {
     width: 40, height: 40, borderRadius: 99,
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.1)",
+    backgroundColor: COLORS.surfaceAlt,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
     alignItems: "center", justifyContent: "center",
   },
 
-  // Pet switcher
   switcherRow: { gap: 8, paddingVertical: 2 },
   switchChip: {
     flexDirection: "row", alignItems: "center", gap: 7,
     paddingVertical: 6, paddingHorizontal: 12, borderRadius: 99,
-    backgroundColor: "rgba(255,255,255,0.04)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.1)",
+    backgroundColor: COLORS.surfaceAlt, borderWidth: 1, borderColor: COLORS.borderFaint,
   },
-  switchChipActive: { backgroundColor: `${MAG}1A`, borderColor: `${MAG}66` },
+  switchChipActive: { backgroundColor: COLORS.primaryLight, borderColor: COLORS.primary },
   switchDot: { width: 8, height: 8, borderRadius: 4 },
   switchChipTxt: { fontSize: 13, fontWeight: "600", color: COLORS.tabInactive },
 
-  // Hero card
   heroGrad:  { borderRadius: 22, padding: 2, marginBottom: 16 },
-  heroInner: { borderRadius: 20, padding: 18, backgroundColor: "#120A2E" },
+  heroInner: { borderRadius: 20, padding: 18, backgroundColor: COLORS.card },
   avatar:    { width: 76, height: 76, borderRadius: 38 },
   avatarFallback: { width: 76, height: 76, borderRadius: 38, alignItems: "center", justifyContent: "center" },
   cameraBtn: {
     position: "absolute", bottom: -2, right: -2,
     width: 28, height: 28, borderRadius: 14,
-    backgroundColor: CYN, alignItems: "center", justifyContent: "center",
-    borderWidth: 2, borderColor: "#120A2E",
+    backgroundColor: COLORS.accentCyan,
+    alignItems: "center", justifyContent: "center",
+    borderWidth: 2, borderColor: COLORS.card,
     shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.4, shadowRadius: 4, elevation: 4,
   },
-  heroName:  { fontSize: 22, fontWeight: "700", color: "#fff" },
+  heroName:  { fontSize: 22, fontWeight: "700", color: COLORS.textPrimary },
   heroBreed: { fontSize: 12, color: COLORS.textSecondary, marginTop: 1 },
-  chip:    { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 99, backgroundColor: "rgba(255,255,255,0.1)" },
-  chipTxt: { fontSize: 12, color: "#fff", fontWeight: "600" },
+  chip:    { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 99, backgroundColor: COLORS.primaryLight },
+  chipTxt: { fontSize: 12, color: COLORS.primary, fontWeight: "600" },
   metaRow: {
     flexDirection: "row", alignItems: "center",
     marginTop: 14, paddingTop: 14,
-    borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.08)",
+    borderTopWidth: 1, borderTopColor: COLORS.borderFaint,
   },
   metaCell:    { flex: 1 },
-  metaDivider: { width: 1, height: 28, backgroundColor: "rgba(255,255,255,0.1)", marginHorizontal: 8 },
+  metaDivider: { width: 1, height: 28, backgroundColor: COLORS.borderFaint, marginHorizontal: 8 },
   metaLabel:   { fontSize: 9, color: COLORS.tabInactive, letterSpacing: 0.8, textTransform: "uppercase", fontWeight: "600" },
-  metaValue:   { fontSize: 12, fontWeight: "600", color: "#fff", marginTop: 3 },
+  metaValue:   { fontSize: 12, fontWeight: "600", color: COLORS.textPrimary, marginTop: 3 },
 
-  // Inner tabs
-  innerTabsRow:    { gap: 6, paddingBottom: 4, marginBottom: 8 },
-  innerTabActive:  { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 99 },
-  innerTabInactive: {
-    paddingVertical: 8, paddingHorizontal: 16, borderRadius: 99,
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.1)",
+  quickGrid: { flexDirection: "row", gap: 10, marginBottom: 4 },
+  quickCard: {
+    flex: 1, backgroundColor: COLORS.card,
+    borderRadius: 18, padding: 14,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
   },
-  innerTabTxt: { fontSize: 13, fontWeight: "600", color: COLORS.tabInactive },
-
-  // Cards genéricas
-  card: {
-    flexDirection: "row", alignItems: "center", gap: 12,
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.08)",
-    borderRadius: 16, padding: 12, marginBottom: 8,
-  },
-  cardIcon:  { width: 36, height: 36, borderRadius: 10, borderWidth: 1, alignItems: "center", justifyContent: "center" },
-  cardTitle: { fontSize: 14, fontWeight: "600", color: "#fff" },
-  cardSub:   { fontSize: 11, color: COLORS.textSecondary, marginTop: 2 },
-  nextLabel: { fontSize: 9, color: COLORS.tabInactive, letterSpacing: 0.8, textTransform: "uppercase" },
-  nextValue: { fontSize: 11, color: "#fff", fontWeight: "500", marginTop: 2 },
-
-  // Timeline
-  tlIcon: {
-    width: 28, height: 28, borderRadius: 14, borderWidth: 1.5,
+  quickIcon: {
+    width: 40, height: 40, borderRadius: 10,
+    backgroundColor: COLORS.primaryLight,
     alignItems: "center", justifyContent: "center",
-    flexShrink: 0, marginTop: 4, zIndex: 1,
+    marginBottom: 10,
   },
+  quickTitle: { fontSize: 14, fontWeight: "700", color: COLORS.textPrimary },
+  quickSub:   { fontSize: 12, color: COLORS.textSecondary, marginTop: 2 },
 
-  // Álbum
-  albumGrid: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  albumCell: {
-    width: (SW - 44) / 3, height: 100,
-    borderRadius: 12, justifyContent: "flex-end",
-    padding: 7, overflow: "hidden",
+  growthCard: {
+    backgroundColor: COLORS.card, borderRadius: 18, padding: 16,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
   },
-  albumLabel: { fontSize: 10, color: "rgba(255,255,255,0.85)", fontWeight: "700" },
-  albumAdd: {
-    flexDirection: "row", alignItems: "center", justifyContent: "center",
-    gap: 6, marginTop: 14, paddingVertical: 12,
-    borderRadius: 99, borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
-  },
+  growthLabel:    { fontSize: 12, color: COLORS.textSecondary, fontWeight: "600" },
+  growthVal:      { fontSize: 36, fontWeight: "800", color: COLORS.textPrimary },
+  growthUnit:     { fontSize: 15, color: COLORS.textSecondary },
+  growthBadge:    { flexDirection: "row", alignItems: "center", gap: 4, paddingVertical: 5, paddingHorizontal: 10, borderRadius: 99, backgroundColor: COLORS.statusOkBg },
+  growthBadgeTxt: { fontSize: 12, fontWeight: "700", color: COLORS.statusOkText },
+  growthAxisLbl:  { fontSize: 10, color: COLORS.tabInactive },
 
-  // Modal
-  modalOverlay: { flex: 1, backgroundColor: "rgba(10,5,32,0.88)", justifyContent: "flex-end" },
+  tlRow:   { flexDirection: "row", gap: 14, minHeight: 56 },
+  tlCircle: {
+    width: 36, height: 36, borderRadius: 18,
+    alignItems: "center", justifyContent: "center",
+    flexShrink: 0,
+  },
+  tlDate:  { fontSize: 10, color: COLORS.textSecondary, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.4 },
+  tlTitle: { fontSize: 14, fontWeight: "700", color: COLORS.textPrimary, marginTop: 2 },
+  tlDesc:  { fontSize: 13, color: COLORS.textSecondary, marginTop: 1 },
+
+  modalOverlay: { flex: 1, backgroundColor: COLORS.overlayModal, justifyContent: "flex-end" },
   modalCard: {
-    backgroundColor: "#1a0f3a",
+    backgroundColor: COLORS.card,
     borderTopLeftRadius: 28, borderTopRightRadius: 28,
     padding: 20, paddingBottom: 40,
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.1)",
+    borderWidth: 1, borderColor: COLORS.borderFaint,
   },
-  modalHandle: {
-    width: 40, height: 4, borderRadius: 99,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    alignSelf: "center", marginBottom: 16,
-  },
-  modalTitle: { fontSize: 22, fontWeight: "800", color: "#fff" },
+  modalHandle: { width: 40, height: 4, borderRadius: 99, backgroundColor: COLORS.borderMed, alignSelf: "center", marginBottom: 16 },
+  modalTitle: { fontSize: 22, fontWeight: "800", color: COLORS.textPrimary },
   modalInput: {
-    backgroundColor: "rgba(255,255,255,0.07)",
+    backgroundColor: COLORS.surfaceAlt,
     borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12,
-    color: "#fff", marginBottom: 8,
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.1)",
+    color: COLORS.textPrimary, marginBottom: 8,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
   },
+});
+
+// ── Estilos del Carnet ────────────────────────────────────────────────────────
+const cs = StyleSheet.create({
+  root: { flex: 1, backgroundColor: COLORS.bg },
+
+  header: {
+    flexDirection: "row", alignItems: "center",
+    paddingHorizontal: 16, paddingTop: 6, paddingBottom: 14,
+  },
+  backBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.borderFaint,
+    alignItems: "center", justifyContent: "center",
+  },
+  headerSub: {
+    fontSize: 11, color: COLORS.tabInactive,
+    letterSpacing: 1, textTransform: "uppercase", fontWeight: "600",
+  },
+  headerTitle: { fontSize: 22, fontWeight: "800", color: COLORS.textPrimary },
+  addBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: COLORS.primary,
+    alignItems: "center", justifyContent: "center",
+  },
+
+  idCard: {
+    backgroundColor: COLORS.textPrimary,
+    borderRadius: 22, padding: 18,
+    overflow: "hidden",
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    elevation: 12,
+  },
+  idLabel:      { fontSize: 10, color: "rgba(255,255,255,0.6)", fontWeight: "600", letterSpacing: 1.5 },
+  idName:       { fontSize: 26, fontWeight: "700", color: "#fff", marginTop: 4 },
+  idMicro:      { fontSize: 12, color: "rgba(255,255,255,0.75)", marginTop: 2 },
+  idAvatar:     { width: 56, height: 56, borderRadius: 28, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
+  idFieldLabel: { fontSize: 10, color: "rgba(255,255,255,0.55)", letterSpacing: 1, fontWeight: "600" },
+  idFieldValue: { fontSize: 18, fontWeight: "700", color: "#fff", marginTop: 2 },
+
+  tabsRow: { flexDirection: "row", paddingHorizontal: 16, paddingBottom: 12, gap: 6 },
+  tabBtn: {
+    flex: 1, paddingVertical: 10, borderRadius: 12,
+    alignItems: "center", justifyContent: "center",
+    backgroundColor: "transparent",
+    borderWidth: 1, borderColor: "transparent",
+  },
+  tabBtnActive: {
+    backgroundColor: COLORS.card,
+    borderColor: COLORS.borderFaint,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  tabTxt:       { fontSize: 13, fontWeight: "600", color: COLORS.tabInactive },
+  tabTxtActive: { color: COLORS.textPrimary },
+
+  itemCard: {
+    flexDirection: "row", alignItems: "center", gap: 12,
+    backgroundColor: COLORS.card,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
+    borderRadius: 16, padding: 14, marginBottom: 10,
+  },
+  itemIcon: {
+    width: 44, height: 44, borderRadius: 12,
+    backgroundColor: COLORS.primaryLight,
+    alignItems: "center", justifyContent: "center",
+    flexShrink: 0,
+  },
+  itemTitle: { fontSize: 15, fontWeight: "700", color: COLORS.textPrimary },
+  itemSub:   { fontSize: 12, color: COLORS.textSecondary, marginTop: 2 },
 });

@@ -15,14 +15,6 @@ import { API_BASE_URL } from "../../src/data/config";
 
 const { width: SW } = Dimensions.get("window");
 
-// Colores del Diseño1
-const MAG = "#E056C7";
-const PRP = "#7B3FE4";
-const CYN = "#4FC3F7";
-const GRN = "#3DDC97";
-const AMB = "#FFB547";
-const WRN = "#FF9A3C";
-
 type PetCard = {
   id: number;
   name: string;
@@ -32,10 +24,8 @@ type PetCard = {
   avatar_url?: string | null;
 };
 
-// ── Anillo decorativo (sin react-native-svg) ──────────────────────────────────
-function Ring({
-  value, color = GRN, size = 50, stroke = 6,
-}: {
+// ── Anillo decorativo ─────────────────────────────────────────────────────────
+function Ring({ value, color = COLORS.accentGreen, size = 50, stroke = 6 }: {
   value: number; color?: string; size?: number; stroke?: number;
 }) {
   return (
@@ -44,13 +34,13 @@ function Ring({
       borderWidth: stroke, borderColor: color,
       alignItems: "center", justifyContent: "center",
     }}>
-      <Text style={{ color: "#fff", fontSize: size * 0.26, fontWeight: "700" }}>{value}</Text>
+      <Text style={{ color, fontSize: size * 0.26, fontWeight: "700" }}>{value}</Text>
     </View>
   );
 }
 
-// ── Sparkline con segmentos absolutos ─────────────────────────────────────────
-function Sparkline({ data, color = MAG }: { data: number[]; color?: string }) {
+// ── Sparkline ─────────────────────────────────────────────────────────────────
+function Sparkline({ data, color = COLORS.accentMagenta }: { data: number[]; color?: string }) {
   const w = SW - 72;
   const h = 44;
   const min = Math.min(...data), max = Math.max(...data);
@@ -101,7 +91,7 @@ function PetAvatar({ pet, size = 64 }: { pet: PetCard; size?: number }) {
   return (
     <View style={{
       width: size, height: size, borderRadius: size / 2, overflow: "hidden",
-      backgroundColor: `${MAG}33`,
+      backgroundColor: COLORS.accentMagenta + "33",
       alignItems: "center", justifyContent: "center",
     }}>
       {avatarUri
@@ -153,7 +143,7 @@ export default function HomeScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={[s.root, s.center]}>
-        <ActivityIndicator color={MAG} size="large" />
+        <ActivityIndicator color={COLORS.accentMagenta} size="large" />
       </SafeAreaView>
     );
   }
@@ -171,6 +161,19 @@ export default function HomeScreen() {
 
   const petName = selectedPet?.name ?? "tu mascota";
 
+  const reminders = [
+    { icon: "medkit-outline",    color: COLORS.accentMagenta, title: "Refuerzo antirrábico",  when: "Mañana · 10:30 am",  sub: "Vet: Dr. Andrés Vargas"    },
+    { icon: "pulse-outline",     color: COLORS.accentCyan,    title: "Antipulgas mensual",    when: "Sáb · todo el día",  sub: "NexGard 28 kg"             },
+    { icon: "calendar-outline",  color: COLORS.accentAmber,   title: "Control veterinario",   when: "15 mayo · 4:00 pm",  sub: "Clínica Patitas Felices"   },
+  ];
+
+  const services = [
+    { icon: "add-circle-outline", labelKey: "home.services.vet"   },
+    { icon: "storefront-outline", labelKey: "home.services.store" },
+    { icon: "heart-outline",      labelKey: "home.services.spa"   },
+    { icon: "compass-outline",    labelKey: "home.services.park"  },
+  ];
+
   return (
     <SafeAreaView style={s.root}>
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
@@ -178,19 +181,19 @@ export default function HomeScreen() {
         {/* ── TopBar ─────────────────────────────────────────────────── */}
         <View style={s.topBar}>
           <View style={{ flex: 1 }}>
-            <Text style={s.topSub}>Hola, tutor de {petName}</Text>
+            <Text style={s.topSub}>{t("home.tutorOf", { name: petName })}</Text>
             <Text style={s.topTitle}>
-              Panel{" "}
-              <Text style={{ color: MAG }}>PetVerse</Text>
+              {t("home.panelTitle")}{" "}
+              <Text style={{ color: COLORS.accentMagenta }}>{t("common.appName")}</Text>
             </Text>
           </View>
           <View style={s.topActions}>
             <TouchableOpacity style={s.iconBtn}>
-              <Ionicons name="notifications-outline" size={20} color="#fff" />
+              <Ionicons name="notifications-outline" size={20} color={COLORS.textPrimary} />
               <View style={s.badge} />
             </TouchableOpacity>
             <TouchableOpacity style={s.iconBtn}>
-              <Ionicons name="settings-outline" size={20} color="#fff" />
+              <Ionicons name="settings-outline" size={20} color={COLORS.textPrimary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -198,14 +201,14 @@ export default function HomeScreen() {
         {/* ── Selector de mascotas ───────────────────────────────────── */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ gap: 8, paddingRight: 4 }}>
-          {pets.map((pet) => {
+          {pets.map(pet => {
             const active = selectedPet?.id === pet.id;
             return (
               <TouchableOpacity key={pet.id} onPress={() => setSelectedPet(pet)}
                 style={[s.petChip, active && s.petChipActive]}>
                 <PetAvatar pet={pet} size={26} />
                 <View>
-                  <Text style={[s.petChipName, { color: active ? "#fff" : COLORS.textSecondary }]}>
+                  <Text style={[s.petChipName, { color: active ? COLORS.primary : COLORS.textSecondary }]}>
                     {pet.name}
                   </Text>
                   {pet.breed || pet.species ? (
@@ -219,14 +222,14 @@ export default function HomeScreen() {
           })}
           <TouchableOpacity style={s.petChipAdd}>
             <Ionicons name="add" size={14} color={COLORS.tabInactive} />
-            <Text style={{ color: COLORS.tabInactive, fontSize: 12, fontWeight: "600" }}>Agregar</Text>
+            <Text style={{ color: COLORS.tabInactive, fontSize: 12, fontWeight: "600" }}>{t("home.pets.addChip")}</Text>
           </TouchableOpacity>
         </ScrollView>
 
         {/* ── Hero card mascota ──────────────────────────────────────── */}
         {selectedPet && (
           <LinearGradient
-            colors={[`${MAG}28`, `${CYN}1E`]}
+            colors={[COLORS.accentMagenta + "40", COLORS.accentCyan + "30"]}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
             style={s.heroCard}
           >
@@ -234,8 +237,8 @@ export default function HomeScreen() {
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 2 }}>
                 <Text style={s.heroName}>{selectedPet.name}</Text>
-                <View style={[s.chip, { backgroundColor: `${GRN}22`, borderColor: `${GRN}44` }]}>
-                  <Text style={{ color: GRN, fontSize: 10, fontWeight: "700" }}>En forma</Text>
+                <View style={[s.chip, { backgroundColor: COLORS.accentGreen + "22", borderColor: COLORS.accentGreen + "44" }]}>
+                  <Text style={{ color: COLORS.accentGreen, fontSize: 10, fontWeight: "700" }}>{t("home.inShape")}</Text>
                 </View>
               </View>
               <Text style={s.heroBio}>
@@ -258,46 +261,42 @@ export default function HomeScreen() {
 
         {/* ── 4 Tarjetas métricas ────────────────────────────────────── */}
         <View style={s.metricsGrid}>
-          {/* Salud */}
           <View style={s.metCard}>
-            <Ring value={86} color={GRN} size={50} stroke={6} />
+            <Ring value={86} color={COLORS.accentGreen} size={50} stroke={6} />
             <View style={{ marginLeft: 10 }}>
-              <Text style={s.metLabel}>SALUD</Text>
-              <Text style={[s.metValue, { color: "#bfffdc" }]}>Excelente</Text>
+              <Text style={s.metLabel}>{t("home.stats.health")}</Text>
+              <Text style={[s.metValue, { color: COLORS.successLight }]}>{t("home.stats.excellent")}</Text>
             </View>
           </View>
 
-          {/* Vacunas */}
           <View style={s.metCard}>
             <View style={s.metRow}>
-              <Text style={s.metLabel}>VACUNAS</Text>
-              <Ionicons name="medkit-outline" size={14} color={MAG} />
+              <Text style={s.metLabel}>{t("home.stats.vaccines")}</Text>
+              <Ionicons name="medkit-outline" size={14} color={COLORS.accentMagenta} />
             </View>
             <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4 }}>
               <Text style={s.metBig}>3</Text>
-              <Text style={s.metSub}>/ 4 al día</Text>
+              <Text style={s.metSub}>/ 4 {t("home.stats.upToDate")}</Text>
             </View>
-            <Text style={[s.metSub, { color: WRN }]}>1 pendiente</Text>
+            <Text style={[s.metSub, { color: COLORS.accentWarn }]}>1 {t("home.stats.pending")}</Text>
           </View>
 
-          {/* Medicación */}
           <View style={s.metCard}>
             <View style={s.metRow}>
-              <Text style={s.metLabel}>MEDICACIÓN</Text>
-              <Ionicons name="pulse-outline" size={14} color={CYN} />
+              <Text style={s.metLabel}>{t("home.stats.medication")}</Text>
+              <Ionicons name="pulse-outline" size={14} color={COLORS.accentCyan} />
             </View>
             <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4 }}>
               <Text style={s.metBig}>2</Text>
-              <Text style={s.metSub}>activas</Text>
+              <Text style={s.metSub}>{t("home.stats.active")}</Text>
             </View>
             <Text style={s.metSub}>Próx. dosis: hoy 8pm</Text>
           </View>
 
-          {/* Última visita */}
           <View style={s.metCard}>
             <View style={s.metRow}>
-              <Text style={s.metLabel}>ÚLTIMA VISITA</Text>
-              <Ionicons name="calendar-outline" size={14} color={AMB} />
+              <Text style={s.metLabel}>{t("home.stats.lastVisit")}</Text>
+              <Ionicons name="calendar-outline" size={14} color={COLORS.accentAmber} />
             </View>
             <Text style={[s.metBig, { fontSize: 18, marginTop: 4 }]}>02 abr</Text>
             <Text style={s.metSub}>Control general · OK</Text>
@@ -305,29 +304,25 @@ export default function HomeScreen() {
         </View>
 
         {/* ── Peso ──────────────────────────────────────────────────── */}
-        <SectionHeader title="Peso" link="Ver detalles" />
+        <SectionHeader title={t("home.sections.weight")} link={t("home.sections.weightDetail")} />
         <View style={s.glassCard}>
           <View style={s.metRow}>
-            <Text style={s.metLabel}>PESO ACTUAL</Text>
-            <Ionicons name="trending-up-outline" size={14} color={MAG} />
+            <Text style={s.metLabel}>{t("home.stats.weightCurrent")}</Text>
+            <Ionicons name="trending-up-outline" size={14} color={COLORS.accentMagenta} />
           </View>
           <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
             <Text style={s.weightVal}>{selectedPet?.weight?.toFixed(1) ?? "28.4"}</Text>
             <Text style={s.metSub}>kg</Text>
           </View>
-          <Text style={[s.metSub, { marginBottom: 10 }]}>+0.3 kg este mes</Text>
-          <Sparkline data={weightHistory} color={MAG} />
+          <Text style={[s.metSub, { marginBottom: 10 }]}>{t("home.stats.weightMonth")}</Text>
+          <Sparkline data={weightHistory} color={COLORS.accentMagenta} />
         </View>
 
         {/* ── Próximos recordatorios ─────────────────────────────────── */}
-        <SectionHeader title="Próximos recordatorios" link="Ver todos" />
-        {[
-          { icon: "medkit-outline", color: MAG,  title: "Refuerzo antirrábico",  when: "Mañana · 10:30 am",  sub: "Vet: Dr. Andrés Vargas" },
-          { icon: "pulse-outline",  color: CYN,  title: "Antipulgas mensual",    when: "Sáb · todo el día",  sub: "NexGard 28 kg" },
-          { icon: "calendar-outline", color: AMB, title: "Control veterinario", when: "15 mayo · 4:00 pm",  sub: "Clínica Patitas Felices" },
-        ].map((r) => (
+        <SectionHeader title={t("home.sections.reminders")} link={t("home.sections.remindersAll")} />
+        {reminders.map(r => (
           <View key={r.title} style={s.reminderCard}>
-            <View style={[s.reminderIcon, { backgroundColor: `${r.color}22`, borderColor: `${r.color}44` }]}>
+            <View style={[s.reminderIcon, { backgroundColor: r.color + "22", borderColor: r.color + "44" }]}>
               <Ionicons name={r.icon as any} size={20} color={r.color} />
             </View>
             <View style={{ flex: 1 }}>
@@ -339,17 +334,20 @@ export default function HomeScreen() {
         ))}
 
         {/* ── Consejo del día ───────────────────────────────────────── */}
-        <SectionHeader title="Consejo del día" link="Más tips" />
+        <SectionHeader title={t("home.sections.tipOfDay")} link={t("home.sections.moreTips")} />
         <LinearGradient
-          colors={[`${MAG}2E`, `${CYN}24`]}
+          colors={[COLORS.accentMagenta + "55", COLORS.accentCyan + "40"]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={s.aiCard}
         >
           <View style={s.aiHeader}>
-            <LinearGradient colors={[MAG, PRP]} style={s.aiIconBg}>
+            <LinearGradient
+              colors={[COLORS.accentMagenta, COLORS.accentPurple]}
+              style={s.aiIconBg}
+            >
               <Ionicons name="sparkles" size={16} color="#fff" />
             </LinearGradient>
-            <Text style={s.aiHeaderTxt}>PetIA · recomendación</Text>
+            <Text style={s.aiHeaderTxt}>{t("home.aiCard.label")}</Text>
           </View>
           <Text style={s.aiBody}>
             {selectedPet?.species === "Gato" || selectedPet?.species?.toLowerCase() === "cat"
@@ -357,27 +355,22 @@ export default function HomeScreen() {
               : `${petName} viene ganando peso de forma saludable. Mantén 2 paseos diarios de 25 min y agrega juegos de olfato para estimular su mente.`}
           </Text>
           <TouchableOpacity style={s.aiBtn}>
-            <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>Hablar con PetIA →</Text>
+            <Text style={{ color: COLORS.primary, fontSize: 12, fontWeight: "600" }}>{t("home.aiCard.cta")}</Text>
           </TouchableOpacity>
         </LinearGradient>
 
         {/* ── Servicios cerca ───────────────────────────────────────── */}
-        <SectionHeader title="Servicios cerca" link="Mapa" />
+        <SectionHeader title={t("home.sections.nearbyServices")} link={t("home.sections.nearbyMap")} />
         <View style={s.servicesGrid}>
-          {[
-            { icon: "add-circle-outline", label: "Vet"    },
-            { icon: "storefront-outline", label: "Tienda" },
-            { icon: "heart-outline",      label: "Spa"    },
-            { icon: "compass-outline",    label: "Parque" },
-          ].map((sv) => (
-            <TouchableOpacity key={sv.label} style={s.serviceBtn}>
+          {services.map(sv => (
+            <TouchableOpacity key={sv.labelKey} style={s.serviceBtn}>
               <LinearGradient
-                colors={[`${MAG}33`, `${CYN}22`]}
+                colors={[COLORS.accentMagenta, COLORS.accentPurple]}
                 style={s.serviceIconBg}
               >
                 <Ionicons name={sv.icon as any} size={20} color="#fff" />
               </LinearGradient>
-              <Text style={s.serviceLabel}>{sv.label}</Text>
+              <Text style={s.serviceLabel}>{t(sv.labelKey)}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -393,18 +386,17 @@ const s = StyleSheet.create({
   center: { justifyContent: "center", alignItems: "center" },
   scroll: { padding: 18, paddingBottom: 130, gap: 14 },
 
-  errTxt:   { color: "#ffb4b4", textAlign: "center", marginBottom: 16 },
-  retryBtn: { paddingHorizontal: 20, paddingVertical: 12, borderRadius: 10, backgroundColor: COLORS.cardBlue },
+  errTxt:   { color: COLORS.errorLight, textAlign: "center", marginBottom: 16 },
+  retryBtn: { paddingHorizontal: 20, paddingVertical: 12, borderRadius: 10, backgroundColor: COLORS.accentCyan },
 
-  // TopBar
   topBar:     { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   topSub:     { fontSize: 11, color: COLORS.textSecondary, letterSpacing: 0.8, textTransform: "uppercase" },
-  topTitle:   { fontSize: 26, fontWeight: "800", color: "#fff", marginTop: 2 },
+  topTitle:   { fontSize: 26, fontWeight: "800", color: COLORS.textPrimary, marginTop: 2 },
   topActions: { flexDirection: "row", gap: 8 },
   iconBtn: {
     width: 40, height: 40, borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.07)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.1)",
+    backgroundColor: COLORS.surfaceAlt,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
     alignItems: "center", justifyContent: "center",
     position: "relative",
   },
@@ -414,110 +406,102 @@ const s = StyleSheet.create({
     backgroundColor: COLORS.badgeRed,
   },
 
-  // Pet chips
   petChip: {
     flexDirection: "row", alignItems: "center", gap: 8,
     paddingVertical: 6, paddingHorizontal: 12,
-    borderRadius: 99, backgroundColor: "rgba(255,255,255,0.04)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.1)",
+    borderRadius: 99, backgroundColor: COLORS.surfaceAlt,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
   },
   petChipActive: {
-    backgroundColor: `${MAG}22`,
-    borderColor: `${MAG}66`,
+    backgroundColor: COLORS.primaryLight,
+    borderColor: COLORS.primary,
   },
   petChipName:  { fontSize: 13, fontWeight: "600" },
   petChipBreed: { fontSize: 10, color: COLORS.tabInactive, marginTop: 1 },
   petChipAdd: {
     flexDirection: "row", alignItems: "center", gap: 4,
     paddingVertical: 6, paddingHorizontal: 12, borderRadius: 99,
-    backgroundColor: "rgba(255,255,255,0.03)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.1)", borderStyle: "dashed",
+    backgroundColor: COLORS.surfaceAlt,
+    borderWidth: 1, borderColor: COLORS.borderMed, borderStyle: "dashed",
   },
 
-  // Hero card
   heroCard: {
     flexDirection: "row", alignItems: "center", gap: 14,
     padding: 16, borderRadius: 18,
-    borderWidth: 1, borderColor: `${MAG}40`,
+    borderWidth: 1, borderColor: COLORS.accentMagenta + "40",
   },
-  heroName: { fontSize: 20, fontWeight: "800", color: "#fff" },
+  heroName: { fontSize: 20, fontWeight: "800", color: COLORS.textPrimary },
   heroBio:  { fontSize: 12, color: COLORS.textSecondary, marginTop: 2 },
 
   chip: {
     flexDirection: "row", alignItems: "center", gap: 4,
     paddingVertical: 3, paddingHorizontal: 9, borderRadius: 99,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.14)",
+    backgroundColor: COLORS.primaryLight,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
   },
   chipTxt: { color: COLORS.textSecondary, fontSize: 11, fontWeight: "600" },
 
-  // Métricas
   metricsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   metCard: {
     width: (SW - 46) / 2,
     padding: 14, borderRadius: 16,
-    backgroundColor: COLORS.surface,
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.06)",
+    backgroundColor: COLORS.card,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
     flexDirection: "row", alignItems: "center",
     flexWrap: "wrap",
   },
-  metRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%", marginBottom: 4 },
+  metRow:   { flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%", marginBottom: 4 },
   metLabel: { fontSize: 10, color: COLORS.textSecondary, letterSpacing: 0.8 },
   metValue: { fontSize: 13, fontWeight: "700" },
-  metBig:   { fontSize: 24, fontWeight: "800", color: "#fff" },
+  metBig:   { fontSize: 24, fontWeight: "800", color: COLORS.textPrimary },
   metSub:   { fontSize: 11, color: COLORS.textSecondary, marginTop: 2 },
 
-  // Peso / glass card
   glassCard: {
     padding: 16, borderRadius: 18,
-    backgroundColor: COLORS.surface,
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.06)",
+    backgroundColor: COLORS.card,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
   },
-  weightVal: { fontSize: 30, fontWeight: "800", color: "#fff" },
+  weightVal: { fontSize: 30, fontWeight: "800", color: COLORS.textPrimary },
 
-  // Sección header
   secRow:   { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  secTitle: { fontSize: 16, fontWeight: "700", color: "#fff" },
-  secLink:  { fontSize: 12, fontWeight: "600", color: CYN },
+  secTitle: { fontSize: 16, fontWeight: "700", color: COLORS.textPrimary },
+  secLink:  { fontSize: 12, fontWeight: "600", color: COLORS.accentCyan },
 
-  // Recordatorios
   reminderCard: {
     flexDirection: "row", alignItems: "center", gap: 12, padding: 14,
-    borderRadius: 16, backgroundColor: COLORS.surface,
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.06)",
+    borderRadius: 16, backgroundColor: COLORS.card,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
   },
   reminderIcon: {
     width: 42, height: 42, borderRadius: 12,
     alignItems: "center", justifyContent: "center",
     borderWidth: 1,
   },
-  reminderTitle: { fontSize: 14, fontWeight: "700", color: "#fff" },
+  reminderTitle: { fontSize: 14, fontWeight: "700", color: COLORS.textPrimary },
   reminderSub:   { fontSize: 11, color: COLORS.textSecondary, marginTop: 2 },
 
-  // AI card
   aiCard: {
     padding: 16, borderRadius: 18,
-    borderWidth: 1, borderColor: `${MAG}4D`,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
     gap: 10,
   },
   aiHeader:    { flexDirection: "row", alignItems: "center", gap: 8 },
   aiIconBg:    { width: 30, height: 30, borderRadius: 8, alignItems: "center", justifyContent: "center" },
-  aiHeaderTxt: { fontSize: 13, fontWeight: "700", color: "#fff" },
-  aiBody: { fontSize: 14, color: "#fff", lineHeight: 22, opacity: 0.9 },
+  aiHeaderTxt: { fontSize: 13, fontWeight: "700", color: COLORS.textPrimary },
+  aiBody: { fontSize: 14, color: COLORS.textPrimary, lineHeight: 22, opacity: 0.9 },
   aiBtn: {
     alignSelf: "flex-start",
     paddingVertical: 8, paddingHorizontal: 14, borderRadius: 99,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.18)",
+    backgroundColor: COLORS.primaryLight,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
   },
 
-  // Servicios
   servicesGrid: { flexDirection: "row", gap: 10 },
   serviceBtn: {
     flex: 1, alignItems: "center", gap: 8,
     paddingVertical: 14, borderRadius: 16,
-    backgroundColor: COLORS.surface,
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.07)",
+    backgroundColor: COLORS.card,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
   },
   serviceIconBg: {
     width: 38, height: 38, borderRadius: 10,

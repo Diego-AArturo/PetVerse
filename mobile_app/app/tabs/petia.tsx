@@ -7,14 +7,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTranslation } from "react-i18next";
 import { COLORS } from "../../src/Theme/colors";
 import { listPets } from "../../src/data/petService";
 import { getTokens } from "../../src/data/tokenStorage";
-
-const MAG = "#E056C7";
-const PRP = "#7B3FE4";
-const CYN = "#4FC3F7";
-const GRN = "#3DDC97";
 
 type Pet = { id: number; name: string; species?: string; breed?: string | null };
 type Msg = { role: "ai" | "user"; text: string };
@@ -47,7 +43,7 @@ function TypingDots() {
         {[d0, d1, d2].map((d, i) => (
           <Animated.View key={i} style={{
             width: 7, height: 7, borderRadius: 3.5,
-            backgroundColor: "rgba(255,255,255,0.75)",
+            backgroundColor: COLORS.tabInactive,
             opacity: d,
           }} />
         ))}
@@ -66,16 +62,17 @@ const MOCK: Record<string, string> = {
 };
 
 function getReply(q: string, petName: string): string {
-  const t = q.toLowerCase();
-  if (t.includes("paseo") || t.includes("caminar") || t.includes("ejercici")) return MOCK.paseo;
-  if (t.includes("fruta") || t.includes("comer") || t.includes("aliment"))    return MOCK.fruta;
-  if (t.includes("vacuna"))                                                     return MOCK.vacuna;
-  if (t.includes("estres") || t.includes("estrés") || t.includes("ansied"))   return MOCK.estres;
+  const lower = q.toLowerCase();
+  if (lower.includes("paseo") || lower.includes("caminar") || lower.includes("ejercici")) return MOCK.paseo;
+  if (lower.includes("fruta") || lower.includes("comer") || lower.includes("aliment"))    return MOCK.fruta;
+  if (lower.includes("vacuna"))                                                             return MOCK.vacuna;
+  if (lower.includes("estres") || lower.includes("estrés") || lower.includes("ansied"))   return MOCK.estres;
   return `Para ${petName}: ` + MOCK.default;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 export default function PetIAScreen() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [pet, setPet]         = useState<Pet | null>(null);
   const [msgs, setMsgs]       = useState<Msg[]>([{ role: "ai", text: GREETING() }]);
@@ -83,12 +80,11 @@ export default function PetIAScreen() {
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
-  // Carga la primera mascota y actualiza el saludo con su nombre
   useEffect(() => {
     (async () => {
       const tok = await getTokens();
-      if (!tok?.access) return;
-      const pets = await listPets(tok.access);
+      if (!tok?.access_token) return;
+      const pets = await listPets(tok.access_token);
       if (pets?.length) {
         const p = pets[0];
         setPet(p);
@@ -109,10 +105,10 @@ export default function PetIAScreen() {
 
   const suggestions = pet
     ? [
-        "¿Cuántas veces debo pasearlo al día?",
-        `¿${pet.name} puede comer fruta?`,
-        "¿Qué vacunas le tocan ahora?",
-        "¿Cómo sé si está estresad@?",
+        t("petia.suggestions.walks"),
+        t("petia.suggestions.fruit", { name: pet.name }),
+        t("petia.suggestions.vaccines"),
+        t("petia.suggestions.stress"),
       ]
     : [];
 
@@ -121,17 +117,15 @@ export default function PetIAScreen() {
     setMsgs(m => [...m, { role: "user", text: q }]);
     setInput("");
     setLoading(true);
-    // TODO: reemplazar con llamada real a la API de IA del backend
     await new Promise(r => setTimeout(r, 1200 + Math.random() * 600));
     setMsgs(m => [...m, { role: "ai", text: getReply(q, pet.name) }]);
     setLoading(false);
   }
 
-  // "perros", "gatos", "mascotas" según especie
   const speciesLabel = (() => {
     const sp = pet?.species?.toLowerCase() ?? "";
-    if (sp.includes("perro") || sp.includes("dog"))    return "perros";
-    if (sp.includes("gato") || sp.includes("cat"))     return "gatos";
+    if (sp.includes("perro") || sp.includes("dog")) return "perros";
+    if (sp.includes("gato") || sp.includes("cat"))  return "gatos";
     return "mascotas";
   })();
 
@@ -142,40 +136,39 @@ export default function PetIAScreen() {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        keyboardVerticalOffset={0}
       >
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <View style={s.header}>
           <View style={{ flex: 1 }}>
-            <Text style={s.headerSub}>ASISTENTE IA</Text>
+            <Text style={s.headerSub}>{t("petia.subtitle")}</Text>
             <Text style={s.headerTitle}>
-              Pet<Text style={{ color: MAG }}>IA</Text>
+              Pet<Text style={{ color: COLORS.primary }}>IA</Text>
             </Text>
           </View>
           <TouchableOpacity style={s.iconBtn} activeOpacity={0.75}>
-            <Ionicons name="ellipsis-horizontal" size={18} color="#fff" />
+            <Ionicons name="ellipsis-horizontal" size={18} color={COLORS.textPrimary} />
           </TouchableOpacity>
         </View>
 
         {/* ── Persona strip ───────────────────────────────────────────────── */}
         <View style={s.persona}>
           <LinearGradient
-            colors={[MAG, PRP, CYN]}
+            colors={[COLORS.accentMagenta, COLORS.accentPurple, COLORS.accentCyan]}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
             style={s.personaIcon}
           >
             <Ionicons name="sparkles" size={20} color="#fff" />
           </LinearGradient>
           <View>
-            <Text style={s.personaName}>PetIA</Text>
+            <Text style={s.personaName}>{t("petia.title")}</Text>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
               <View style={s.onlineDot} />
-              <Text style={s.onlineTxt}>En línea · entrenada para {speciesLabel}</Text>
+              <Text style={s.onlineTxt}>{t("petia.online", { species: speciesLabel })}</Text>
             </View>
           </View>
         </View>
 
-        {/* Separador */}
         <View style={s.divider} />
 
         {/* ── Chat ────────────────────────────────────────────────────────── */}
@@ -189,12 +182,12 @@ export default function PetIAScreen() {
           {msgs.map((m, i) =>
             m.role === "ai" ? (
               <View key={i} style={s.bubbleAI}>
-                <Text style={s.msgTxt}>{m.text}</Text>
+                <Text style={[s.msgTxt, { color: COLORS.textPrimary }]}>{m.text}</Text>
               </View>
             ) : (
               <LinearGradient
                 key={i}
-                colors={[MAG, PRP]}
+                colors={[COLORS.accentMagenta, COLORS.accentPurple]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                 style={s.bubbleUser}
               >
@@ -226,7 +219,7 @@ export default function PetIAScreen() {
               value={input}
               onChangeText={setInput}
               onSubmitEditing={() => ask(input)}
-              placeholder={pet ? `Pregunta sobre ${pet.name}…` : "Escribe tu pregunta…"}
+              placeholder={pet ? t("petia.placeholder", { name: pet.name }) : t("petia.placeholderDefault")}
               placeholderTextColor={COLORS.tabInactive}
               style={s.input}
               returnKeyType="send"
@@ -240,7 +233,7 @@ export default function PetIAScreen() {
             >
               {canSend ? (
                 <LinearGradient
-                  colors={[MAG, PRP]}
+                  colors={[COLORS.accentMagenta, COLORS.accentPurple]}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                   style={s.sendBtn}
                 >
@@ -248,14 +241,14 @@ export default function PetIAScreen() {
                 </LinearGradient>
               ) : (
                 <View style={[s.sendBtn, s.sendBtnDim]}>
-                  <Ionicons name="send" size={15} color="rgba(255,255,255,0.25)" />
+                  <Ionicons name="send" size={15} color={COLORS.tabInactive} />
                 </View>
               )}
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity style={s.micBtn} activeOpacity={0.75}>
-            <Ionicons name="mic" size={18} color="#fff" />
+            <Ionicons name="mic" size={18} color={COLORS.tabInactive} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -266,7 +259,6 @@ export default function PetIAScreen() {
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: COLORS.bgDark },
 
-  // Header
   header: {
     flexDirection: "row", alignItems: "center",
     paddingHorizontal: 18, paddingTop: 6, paddingBottom: 2,
@@ -275,15 +267,14 @@ const s = StyleSheet.create({
     fontSize: 11, color: COLORS.tabInactive,
     letterSpacing: 1, textTransform: "uppercase", fontWeight: "600",
   },
-  headerTitle: { fontSize: 26, fontWeight: "800", color: "#fff" },
+  headerTitle: { fontSize: 26, fontWeight: "800", color: COLORS.textPrimary },
   iconBtn: {
     width: 40, height: 40, borderRadius: 99,
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.1)",
+    backgroundColor: COLORS.surfaceAlt,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
     alignItems: "center", justifyContent: "center",
   },
 
-  // Persona strip
   persona: {
     flexDirection: "row", alignItems: "center", gap: 10,
     paddingHorizontal: 18, paddingVertical: 10,
@@ -291,24 +282,26 @@ const s = StyleSheet.create({
   personaIcon: {
     width: 40, height: 40, borderRadius: 12,
     alignItems: "center", justifyContent: "center",
-    shadowColor: MAG, shadowOffset: { width: 0, height: 0 },
+    shadowColor: COLORS.accentMagenta,
+    shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.6, shadowRadius: 14, elevation: 8,
   },
-  personaName: { fontSize: 13, fontWeight: "700", color: "#fff" },
+  personaName: { fontSize: 13, fontWeight: "700", color: COLORS.textPrimary },
   onlineDot: {
-    width: 6, height: 6, borderRadius: 3, backgroundColor: GRN,
-    shadowColor: GRN, shadowOffset: { width: 0, height: 0 },
+    width: 6, height: 6, borderRadius: 3,
+    backgroundColor: COLORS.accentGreen,
+    shadowColor: COLORS.accentGreen,
+    shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.9, shadowRadius: 4,
   },
-  onlineTxt: { fontSize: 10, color: GRN, fontWeight: "500" },
-  divider: { height: 1, backgroundColor: "rgba(255,255,255,0.07)", marginHorizontal: 18 },
+  onlineTxt: { fontSize: 10, color: COLORS.accentGreen, fontWeight: "500" },
+  divider: { height: 1, backgroundColor: COLORS.borderFaint, marginHorizontal: 18 },
 
-  // Chat
   chatContent: { paddingHorizontal: 14, paddingTop: 14, paddingBottom: 8 },
   bubbleAI: {
     alignSelf: "flex-start", maxWidth: "82%",
-    backgroundColor: "rgba(255,255,255,0.10)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.16)",
+    backgroundColor: COLORS.card,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
     borderRadius: 18, borderBottomLeftRadius: 4,
     padding: 12, marginBottom: 10,
   },
@@ -319,19 +312,17 @@ const s = StyleSheet.create({
   },
   msgTxt: { color: "#fff", fontSize: 13.5, lineHeight: 20 },
 
-  // Suggestions
   suggestions: {
     paddingHorizontal: 14, paddingBottom: 6,
     flexDirection: "row", flexWrap: "wrap", gap: 8,
   },
   chip: {
     paddingVertical: 8, paddingHorizontal: 13, borderRadius: 99,
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: COLORS.card,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
   },
-  chipTxt: { color: "#fff", fontSize: 12 },
+  chipTxt: { color: COLORS.textPrimary, fontSize: 12 },
 
-  // Input
   inputRow: {
     flexDirection: "row", alignItems: "center", gap: 8,
     paddingHorizontal: 12, paddingTop: 8,
@@ -339,20 +330,20 @@ const s = StyleSheet.create({
   inputWrap: {
     flex: 1, flexDirection: "row", alignItems: "center", gap: 6,
     paddingLeft: 14, paddingRight: 6, paddingVertical: 4,
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.1)",
+    backgroundColor: COLORS.card,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
     borderRadius: 99,
   },
-  input: { flex: 1, color: "#fff", fontSize: 14, paddingVertical: 9 },
+  input: { flex: 1, color: COLORS.textPrimary, fontSize: 14, paddingVertical: 9 },
   sendBtn: {
     width: 36, height: 36, borderRadius: 18,
     alignItems: "center", justifyContent: "center",
   },
-  sendBtnDim: { backgroundColor: "rgba(255,255,255,0.08)" },
+  sendBtnDim: { backgroundColor: COLORS.surfaceAlt },
   micBtn: {
     width: 44, height: 44, borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.1)",
+    backgroundColor: COLORS.surfaceAlt,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
     alignItems: "center", justifyContent: "center",
   },
 });

@@ -6,129 +6,120 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTranslation } from "react-i18next";
 import { COLORS } from "../../src/Theme/colors";
 
 const { width: SW } = Dimensions.get("window");
-const MAG = "#E056C7";
-const PRP = "#7B3FE4";
-const CYN = "#4FC3F7";
-const GRN = "#3DDC97";
-const AMB = "#FFB547";
 
-// ── Datos estáticos placeholder ───────────────────────────────────────────────
-const STORIES = [
-  { name: "Luna",   emoji: "🐱", hue: PRP,     hasNew: true  },
-  { name: "Rocky",  emoji: "🐶", hue: MAG,     hasNew: true  },
-  { name: "Mía",    emoji: "🐩", hue: CYN,     hasNew: false },
-  { name: "Kiwi",   emoji: "🦜", hue: AMB,     hasNew: true  },
-  { name: "Toby",   emoji: "🐕", hue: GRN,     hasNew: false },
-  { name: "Nala",   emoji: "🐈", hue: "#FF6BD6", hasNew: true },
-];
-
+// ── Datos ─────────────────────────────────────────────────────────────────────
 type Post = {
   id: number; user: string; pet: string; when: string;
   text: string; likes: number; comments: number;
   hue: string; tag: string; emoji: string;
-  verified: boolean; inFeed: boolean;
+  verified: boolean; mine?: boolean;
 };
+
 const ALL_POSTS: Post[] = [
   {
     id: 1, user: "Laura M.", pet: "Rocky · Labrador", when: "12 min",
     text: "Primer día en el parque de la 93 🥹 miren esa cara de felicidad. ¿Alguien más va los domingos?",
-    likes: 42, comments: 8, hue: MAG, tag: "Parques", emoji: "🐕", verified: false, inFeed: true,
+    likes: 42, comments: 8, hue: COLORS.accentMagenta, tag: "Parques", emoji: "🐕", verified: false,
   },
   {
     id: 2, user: "Dra. Camila R.", pet: "Veterinaria · Chapinero", when: "1 h",
     text: "Recordatorio: la desparasitación mensual es CLAVE en temporada de lluvias. Les dejo mi guía rápida ↓",
-    likes: 128, comments: 24, hue: PRP, tag: "Salud", emoji: "🩺", verified: true, inFeed: false,
+    likes: 128, comments: 24, hue: COLORS.accentPurple, tag: "Salud", emoji: "🩺", verified: true,
   },
   {
     id: 3, user: "Andrés V.", pet: "Mía · Poodle", when: "3 h",
     text: "Buscando recomendaciones de peluquería canina en Teusaquillo. Mía quedó hermosa la última vez 🐩",
-    likes: 17, comments: 11, hue: CYN, tag: "Grooming", emoji: "🐩", verified: false, inFeed: true,
+    likes: 17, comments: 11, hue: COLORS.accentCyan, tag: "Grooming", emoji: "🐩", verified: false,
   },
   {
     id: 4, user: "Sara T.", pet: "Bolt · Beagle", when: "5 h",
     text: "Los beagles son TAN traviesos pero TAN amados 😅 hoy se comió mi audífono. ¡Cuéntenme sus historias!",
-    likes: 89, comments: 34, hue: AMB, tag: "Vida pet", emoji: "🐶", verified: false, inFeed: true,
+    likes: 89, comments: 34, hue: COLORS.accentAmber, tag: "Vida pet", emoji: "🐶", verified: false,
   },
   {
     id: 5, user: "PetVerse", pet: "Comunidad oficial", when: "1 d",
     text: "¡Semana de adopción! Esta semana publicaremos historias de mascotas que buscan hogar. ¿Los compartirías? 🏠",
-    likes: 342, comments: 67, hue: GRN, tag: "Adopción", emoji: "🐾", verified: true, inFeed: false,
+    likes: 342, comments: 67, hue: COLORS.accentGreen, tag: "Adopción", emoji: "🐾", verified: true,
   },
 ];
 
-const SUGGESTIONS = [
-  { id: 1, name: "María L.",    info: "3 Golden Retrievers", followers: "1.2k", hue: MAG, emoji: "🐕" },
-  { id: 2, name: "Dr. Arango",  info: "Veterinario UNAL",    followers: "4.8k", hue: CYN, emoji: "🩺" },
-  { id: 3, name: "Casa Felina", info: "Refugio · Bogotá",    followers: "890",  hue: PRP, emoji: "🐱" },
-  { id: 4, name: "Camilo P.",   info: "Bulldog Francés",     followers: "560",  hue: AMB, emoji: "🐶" },
+const MY_POSTS: Post[] = [
+  {
+    id: 10, user: "Tú", pet: "Luna · Golden Mix", when: "1 h",
+    text: "Luna descubrió que le encanta el parque 🐾 miren esa carota de felicidad. Cada paseo es una aventura nueva.",
+    likes: 24, comments: 7, hue: COLORS.accentPurple, tag: "Vida pet", emoji: "🐶", verified: false, mine: true,
+  },
+  {
+    id: 11, user: "Tú", pet: "Luna · Golden Mix", when: "3 d",
+    text: "¡Consulta de hoy perfecta! 12.4 kg y muy sana según la Dra. Patricia 🩺 Gracias VetCare Centro.",
+    likes: 56, comments: 12, hue: COLORS.accentGreen, tag: "Salud", emoji: "🩺", verified: false, mine: true,
+  },
 ];
 
-type Tip = { id: number; title: string; category: string; readTime: string; color: string; author: string; emoji: string; text: string };
+type Tip = { id: number; title: string; category: string; readTime: string; color: string; author: string; emoji: string; text: string; mine?: boolean };
 const TIPS: Tip[] = [
   {
     id: 1, title: "7 señales de que tu perro está ansioso",
-    category: "Comportamiento", readTime: "3 min", color: PRP,
+    category: "Comportamiento", readTime: "3 min", color: COLORS.accentPurple,
     author: "PetIA · Inteligencia artificial", emoji: "🧠",
     text: "Los perros no hablan, pero sus cuerpos dicen mucho. Aprende a leer el lenguaje corporal de tu mascota antes de que sea tarde...",
   },
   {
     id: 2, title: "Golden Retrievers: guía de alimentación por etapas",
-    category: "Nutrición", readTime: "5 min", color: AMB,
+    category: "Nutrición", readTime: "5 min", color: COLORS.accentAmber,
     author: "Dra. Camila R. · Veterinaria", emoji: "🍗",
     text: "La nutrición de un Golden varía mucho entre cachorro, adulto y senior. Aquí un resumen completo con porciones y marcas recomendadas...",
   },
   {
     id: 3, title: "Cómo introducir un segundo gato en casa",
-    category: "Convivencia", readTime: "4 min", color: CYN,
+    category: "Convivencia", readTime: "4 min", color: COLORS.accentCyan,
     author: "Sara T. · Usuaria", emoji: "🐱",
     text: "Después de tres intentos fallidos, encontré el método que funciona: cuarentena, intercambio de olores y presentación progresiva...",
   },
   {
     id: 4, title: "Primeros auxilios para mascotas: lo básico",
-    category: "Salud", readTime: "6 min", color: GRN,
+    category: "Salud", readTime: "6 min", color: COLORS.accentGreen,
     author: "PetVerse · Equipo editorial", emoji: "🏥",
     text: "¿Sabes qué hacer si tu mascota se atraganta o tiene una convulsión? Este artículo puede salvar vidas. Compártelo con tu familia...",
   },
   {
     id: 5, title: "Razas más activas para apartamento pequeño",
-    category: "Razas", readTime: "4 min", color: MAG,
+    category: "Razas", readTime: "4 min", color: COLORS.accentMagenta,
     author: "PetIA · Inteligencia artificial", emoji: "🏠",
     text: "Contrario a lo que muchos creen, no necesitas una casa grande para tener un perro activo. Estas razas se adaptan perfecto...",
+  },
+  {
+    id: 6, title: "Cómo llevar el peso de tu mascota mes a mes",
+    category: "Bienestar", readTime: "3 min", color: COLORS.accentPurple,
+    author: "Tú · Mi consejo", emoji: "⚖️",
+    text: "Registrar el peso mensual me ayudó a detectar a tiempo que Luna estaba ganando peso muy rápido. Comparto mi método...",
+    mine: true,
   },
 ];
 
 const GROUPS = [
-  { name: "Golden Retrievers CO",  members: "2.4k", hue: MAG, emoji: "🐕" },
-  { name: "Gatos de apartamento",  members: "890",  hue: PRP, emoji: "🐱" },
-  { name: "Adopción responsable",  members: "5.1k", hue: CYN, emoji: "🐾" },
-  { name: "Nutrición canina",      members: "1.1k", hue: GRN, emoji: "🥗" },
+  { name: "Golden Retrievers CO",  members: "2.4k", hue: COLORS.accentMagenta, emoji: "🐕" },
+  { name: "Gatos de apartamento",  members: "890",  hue: COLORS.accentPurple,  emoji: "🐱" },
+  { name: "Adopción responsable",  members: "5.1k", hue: COLORS.accentCyan,    emoji: "🐾" },
+  { name: "Nutrición canina",      members: "1.1k", hue: COLORS.accentGreen,   emoji: "🥗" },
 ];
 
-type Filter = "parati" | "feed" | "todos" | "consejos";
-const FILTERS: { id: Filter; label: string }[] = [
-  { id: "parati",   label: "Para ti"  },
-  { id: "feed",     label: "Feed"     },
-  { id: "todos",    label: "Todos"    },
-  { id: "consejos", label: "Consejos" },
-];
+type Filter = "parati" | "consejos" | "todos" | "miperfil";
+const FILTER_IDS: Filter[] = ["parati", "consejos", "todos", "miperfil"];
 
 // ── Componentes menores ───────────────────────────────────────────────────────
-
-// Placeholder visual de imagen en posts
 function ImgBlock({ hue, label }: { hue: string; label: string }) {
-  // Elige par de colores según hue
-  const dark = hue + "22";
   return (
     <LinearGradient
-      colors={["#1a0e3e", hue + "55"]}
+      colors={[COLORS.primaryLight, hue + "AA"]}
       start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
       style={s.imgBlock}
     >
-      <View style={{ position: "absolute", inset: 0, opacity: 0.12 } as any}>
-        {/* stripes simuladas */}
+      <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, opacity: 0.12 }}>
         {[0,1,2,3,4,5].map(i => (
           <View key={i} style={{ position: "absolute", left: i * 40 - 20, top: -20, width: 16, height: 220, backgroundColor: "#fff", transform: [{ rotate: "135deg" }] }} />
         ))}
@@ -140,14 +131,12 @@ function ImgBlock({ hue, label }: { hue: string; label: string }) {
   );
 }
 
-// Tarjeta de post
-function PostCard({ post, onLike }: { post: Post; onLike: (id: number) => void }) {
+function PostCard({ post, onLike, showMine }: { post: Post; onLike: (id: number) => void; showMine?: boolean }) {
   return (
-    <View style={s.postCard}>
-      {/* Cabecera */}
+    <View style={[s.postCard, post.mine && showMine && { borderColor: COLORS.primary + "44", borderWidth: 1.5 }]}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 }}>
         <LinearGradient
-          colors={[post.hue, "#2a1560"]}
+          colors={[post.hue, post.hue + "88"]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={s.postAvatar}
         >
@@ -156,9 +145,7 @@ function PostCard({ post, onLike }: { post: Post; onLike: (id: number) => void }
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <Text style={s.postUser}>{post.user}</Text>
-            {post.verified && (
-              <Ionicons name="checkmark-circle" size={13} color={CYN} />
-            )}
+            {post.verified && <Ionicons name="checkmark-circle" size={13} color={COLORS.accentCyan} />}
           </View>
           <Text style={s.postMeta}>{post.pet} · hace {post.when}</Text>
         </View>
@@ -167,13 +154,9 @@ function PostCard({ post, onLike }: { post: Post; onLike: (id: number) => void }
         </View>
       </View>
 
-      {/* Texto */}
       <Text style={s.postText}>{post.text}</Text>
-
-      {/* Imagen placeholder */}
       <ImgBlock hue={post.hue} label={post.tag} />
 
-      {/* Acciones */}
       <View style={s.postActions}>
         <TouchableOpacity style={s.actionBtn} onPress={() => onLike(post.id)} activeOpacity={0.75}>
           <Ionicons name="heart-outline" size={18} color={COLORS.tabInactive} />
@@ -183,7 +166,7 @@ function PostCard({ post, onLike }: { post: Post; onLike: (id: number) => void }
           <Ionicons name="chatbubble-outline" size={17} color={COLORS.tabInactive} />
           <Text style={s.actionTxt}>{post.comments}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[s.actionBtn, { marginLeft: "auto" }]} activeOpacity={0.75}>
+        <TouchableOpacity style={[s.actionBtn, { marginLeft: "auto" as any }]} activeOpacity={0.75}>
           <Ionicons name="paper-plane-outline" size={17} color={COLORS.tabInactive} />
         </TouchableOpacity>
       </View>
@@ -191,10 +174,10 @@ function PostCard({ post, onLike }: { post: Post; onLike: (id: number) => void }
   );
 }
 
-// Tarjeta de consejo
 function TipCard({ tip }: { tip: Tip }) {
+  const { t } = useTranslation();
   return (
-    <View style={s.tipCard}>
+    <View style={[s.tipCard, tip.mine && { borderColor: COLORS.primary + "44", borderWidth: 1.5 }]}>
       <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
         <LinearGradient
           colors={[tip.color, tip.color + "88"]}
@@ -208,7 +191,7 @@ function TipCard({ tip }: { tip: Tip }) {
             <View style={[s.tagChip, { borderColor: tip.color + "55", backgroundColor: tip.color + "18" }]}>
               <Text style={[s.tagTxt, { color: tip.color }]}>{tip.category}</Text>
             </View>
-            <Text style={s.tipReadTime}>· {tip.readTime} lectura</Text>
+            <Text style={s.tipReadTime}>· {tip.readTime} {t("community.readTime")}</Text>
           </View>
           <Text style={s.tipTitle}>{tip.title}</Text>
           <Text style={s.tipText} numberOfLines={2}>{tip.text}</Text>
@@ -219,42 +202,90 @@ function TipCard({ tip }: { tip: Tip }) {
   );
 }
 
-// Tarjeta de perfil sugerido
-function SuggestionCard({ sug, onFollow }: { sug: typeof SUGGESTIONS[0]; onFollow: () => void }) {
-  const [following, setFollowing] = useState(false);
+function SecHeader({ title, action }: { title: string; action?: string }) {
   return (
-    <View style={s.sugCard}>
-      <LinearGradient
-        colors={[sug.hue, sug.hue + "55"]}
-        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-        style={s.sugAvatar}
-      >
-        <Text style={{ fontSize: 26 }}>{sug.emoji}</Text>
-      </LinearGradient>
-      <Text style={s.sugName} numberOfLines={1}>{sug.name}</Text>
-      <Text style={s.sugInfo} numberOfLines={1}>{sug.info}</Text>
-      <Text style={s.sugFollowers}>{sug.followers} seguidores</Text>
-      <TouchableOpacity
-        style={{ borderRadius: 99, overflow: "hidden", marginTop: 10 }}
-        onPress={() => { setFollowing(f => !f); onFollow(); }}
-        activeOpacity={0.8}
-      >
-        {following ? (
-          <View style={[s.followBtn, { backgroundColor: "rgba(255,255,255,0.08)", borderWidth: 1, borderColor: "rgba(255,255,255,0.15)" }]}>
-            <Text style={{ color: COLORS.textSecondary, fontSize: 12, fontWeight: "700" }}>Siguiendo</Text>
-          </View>
-        ) : (
-          <LinearGradient colors={[MAG, PRP]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.followBtn}>
-            <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>Seguir</Text>
+    <View style={s.secHeader}>
+      <Text style={s.secTitle}>{title}</Text>
+      {action && <Text style={s.secAction}>{action}</Text>}
+    </View>
+  );
+}
+
+// ── Mi Perfil ─────────────────────────────────────────────────────────────────
+function MyProfileView({ onLike }: { onLike: (id: number) => void }) {
+  const { t } = useTranslation();
+  const myTips = TIPS.filter(tip => tip.mine);
+
+  return (
+    <View>
+      <View style={s.profileCard}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+          <LinearGradient
+            colors={[COLORS.accentMagenta, COLORS.accentPurple, COLORS.accentCyan]}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+            style={s.profileAvatar}
+          >
+            <Text style={{ fontSize: 30 }}>🐶</Text>
           </LinearGradient>
-        )}
+          <View style={{ flex: 1 }}>
+            <Text style={s.profileName}>{t("community.profile.name")}</Text>
+            <Text style={s.profileBio}>{t("community.profile.bio")}</Text>
+          </View>
+          <TouchableOpacity style={s.editBtn} activeOpacity={0.8}>
+            <Ionicons name="pencil-outline" size={15} color={COLORS.primary} />
+            <Text style={{ fontSize: 12, fontWeight: "700", color: COLORS.primary }}>{t("community.profile.editBtn")}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={s.statsRow}>
+          {[
+            { value: `${MY_POSTS.length + myTips.length}`, labelKey: "community.profile.stats.posts" },
+            { value: "142", labelKey: "community.profile.stats.followers" },
+            { value: "89",  labelKey: "community.profile.stats.following"  },
+          ].map((stat, i, arr) => (
+            <React.Fragment key={stat.labelKey}>
+              <View style={s.statCell}>
+                <Text style={s.statValue}>{stat.value}</Text>
+                <Text style={s.statLabel}>{t(stat.labelKey)}</Text>
+              </View>
+              {i < arr.length - 1 && <View style={s.statDivider} />}
+            </React.Fragment>
+          ))}
+        </View>
+      </View>
+
+      <TouchableOpacity style={{ borderRadius: 99, overflow: "hidden", marginBottom: 20 }} activeOpacity={0.88}>
+        <LinearGradient colors={[COLORS.accentMagenta, COLORS.accentPurple]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+          style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 13, borderRadius: 99 }}>
+          <Ionicons name="add-circle-outline" size={18} color="#fff" />
+          <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>{t("community.profile.newPost")}</Text>
+        </LinearGradient>
       </TouchableOpacity>
+
+      <SecHeader title={t("community.sections.myPosts")} />
+      {MY_POSTS.length === 0 ? (
+        <View style={s.emptyState}>
+          <Text style={{ fontSize: 32, marginBottom: 10 }}>{t("community.empty.noPostsIcon")}</Text>
+          <Text style={s.emptyTitle}>{t("community.empty.noPostsTitle")}</Text>
+          <Text style={s.emptySub}>{t("community.empty.noPostsSub")}</Text>
+        </View>
+      ) : (
+        MY_POSTS.map(post => <PostCard key={post.id} post={post} onLike={onLike} showMine />)
+      )}
+
+      {myTips.length > 0 && (
+        <>
+          <SecHeader title={t("community.sections.myTips")} />
+          {myTips.map(tip => <TipCard key={tip.id} tip={tip} />)}
+        </>
+      )}
     </View>
   );
 }
 
 // ── Pantalla principal ────────────────────────────────────────────────────────
 export default function CommunityScreen() {
+  const { t } = useTranslation();
   const [filter, setFilter]         = useState<Filter>("parati");
   const [showSearch, setShowSearch] = useState(false);
   const [query, setQuery]           = useState("");
@@ -264,10 +295,8 @@ export default function CommunityScreen() {
   const toggleLike = (id: number) =>
     setLikes(prev => ({ ...prev, [id]: !prev[id] }));
 
-  const visiblePosts =
-    filter === "feed"  ? ALL_POSTS.filter(p => p.inFeed) :
-    filter === "parati"? ALL_POSTS.slice(0, 3) :
-    ALL_POSTS;
+  const withLikes = (posts: Post[]) =>
+    posts.map(p => ({ ...p, likes: p.likes + (likes[p.id] ? 1 : 0) }));
 
   return (
     <SafeAreaView style={s.root} edges={["top"]}>
@@ -284,29 +313,29 @@ export default function CommunityScreen() {
               autoFocus
               value={query}
               onChangeText={setQuery}
-              placeholder="Buscar personas, mascotas, consejos…"
+              placeholder={t("community.searchPlaceholder")}
               placeholderTextColor={COLORS.tabInactive}
               style={s.searchInput}
               returnKeyType="search"
             />
             <TouchableOpacity onPress={() => { setShowSearch(false); setQuery(""); }}>
-              <Text style={{ color: MAG, fontWeight: "700", fontSize: 13 }}>Cancelar</Text>
+              <Text style={{ color: COLORS.accentMagenta, fontWeight: "700", fontSize: 13 }}>{t("community.searchCancel")}</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <View style={s.header}>
             <View style={{ flex: 1 }}>
-              <Text style={s.headerSub}>COMUNIDAD PETVERSE</Text>
+              <Text style={s.headerSub}>{t("community.subtitle")}</Text>
               <Text style={s.headerTitle}>
-                Feed <Text style={{ color: MAG }}>pet</Text>
+                {t("community.title")} <Text style={{ color: COLORS.accentMagenta }}>{t("community.titleHighlight")}</Text>
               </Text>
             </View>
             <TouchableOpacity style={s.iconBtn} onPress={() => setShowSearch(true)} activeOpacity={0.75}>
-              <Ionicons name="search" size={18} color="#fff" />
+              <Ionicons name="search" size={18} color={COLORS.textPrimary} />
             </TouchableOpacity>
             <View style={{ position: "relative", marginLeft: 6 }}>
               <TouchableOpacity style={s.iconBtn} activeOpacity={0.75}>
-                <Ionicons name="notifications-outline" size={18} color="#fff" />
+                <Ionicons name="notifications-outline" size={18} color={COLORS.textPrimary} />
               </TouchableOpacity>
               {notifCount > 0 && (
                 <View style={s.notifBadge}>
@@ -317,47 +346,6 @@ export default function CommunityScreen() {
           </View>
         )}
 
-        {/* ── Stories ─────────────────────────────────────────────────────── */}
-        {!showSearch && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={s.storiesRow}
-          >
-            {/* Tu story */}
-            <View style={s.storyWrap}>
-              <View style={s.myStory}>
-                <Ionicons name="add" size={22} color={COLORS.tabInactive} />
-              </View>
-              <Text style={s.storyName}>Tu story</Text>
-            </View>
-
-            {/* Stories de amigos */}
-            {STORIES.map(story => (
-              <TouchableOpacity key={story.name} style={s.storyWrap} activeOpacity={0.85}>
-                {story.hasNew ? (
-                  <LinearGradient
-                    colors={[MAG, PRP, CYN, MAG]}
-                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                    style={s.storyRing}
-                  >
-                    <View style={[s.storyInner, { backgroundColor: story.hue }]}>
-                      <Text style={{ fontSize: 26 }}>{story.emoji}</Text>
-                    </View>
-                  </LinearGradient>
-                ) : (
-                  <View style={[s.storyRingGray]}>
-                    <View style={[s.storyInner, { backgroundColor: story.hue }]}>
-                      <Text style={{ fontSize: 26 }}>{story.emoji}</Text>
-                    </View>
-                  </View>
-                )}
-                <Text style={s.storyName}>{story.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        )}
-
         {/* ── Filtros ──────────────────────────────────────────────────────── */}
         {!showSearch && (
           <ScrollView
@@ -365,24 +353,24 @@ export default function CommunityScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={s.filtersRow}
           >
-            {FILTERS.map(f => (
+            {FILTER_IDS.map(id => (
               <TouchableOpacity
-                key={f.id}
-                onPress={() => setFilter(f.id)}
+                key={id}
+                onPress={() => setFilter(id)}
                 style={{ borderRadius: 99, overflow: "hidden" }}
                 activeOpacity={0.75}
               >
-                {filter === f.id ? (
+                {filter === id ? (
                   <LinearGradient
-                    colors={[MAG, PRP]}
+                    colors={[COLORS.accentMagenta, COLORS.accentPurple]}
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                     style={s.filterActive}
                   >
-                    <Text style={[s.filterTxt, { color: "#fff" }]}>{f.label}</Text>
+                    <Text style={[s.filterTxt, { color: "#fff" }]}>{t(`community.filters.${id}`)}</Text>
                   </LinearGradient>
                 ) : (
                   <View style={s.filterInactive}>
-                    <Text style={s.filterTxt}>{f.label}</Text>
+                    <Text style={s.filterTxt}>{t(`community.filters.${id}`)}</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -390,99 +378,23 @@ export default function CommunityScreen() {
           </ScrollView>
         )}
 
-        {/* ── Contenido: PARA TI ───────────────────────────────────────────── */}
+        {/* ── PARA TI ──────────────────────────────────────────────────────── */}
         {!showSearch && filter === "parati" && (
           <View>
-            {/* Sugerencias de perfiles */}
-            <View style={s.secHeader}>
-              <Text style={s.secTitle}>Sugerencias para ti</Text>
-              <Text style={s.secAction}>Ver más</Text>
-            </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={s.sugRow}
-            >
-              {SUGGESTIONS.map(sug => (
-                <SuggestionCard key={sug.id} sug={sug} onFollow={() => {}} />
-              ))}
-            </ScrollView>
-
-            {/* Posts recomendados */}
-            <View style={s.secHeader}>
-              <Text style={s.secTitle}>Recomendado</Text>
-            </View>
-            {visiblePosts.map(post => (
-              <PostCard key={post.id} post={{ ...post, likes: post.likes + (likes[post.id] ? 1 : 0) }} onLike={toggleLike} />
+            <SecHeader title={t("community.sections.recommended")} />
+            {withLikes(ALL_POSTS.slice(0, 3)).map(post => (
+              <PostCard key={post.id} post={post} onLike={toggleLike} />
             ))}
-          </View>
-        )}
-
-        {/* ── Contenido: FEED ──────────────────────────────────────────────── */}
-        {!showSearch && filter === "feed" && (
-          <View>
-            {visiblePosts.length === 0 ? (
-              <View style={s.emptyState}>
-                <Text style={{ fontSize: 32, marginBottom: 10 }}>🐾</Text>
-                <Text style={s.emptyTitle}>Tu feed está vacío</Text>
-                <Text style={s.emptySub}>Sigue a personas para ver sus publicaciones aquí.</Text>
-              </View>
-            ) : (
-              visiblePosts.map(post => (
-                <PostCard key={post.id} post={{ ...post, likes: post.likes + (likes[post.id] ? 1 : 0) }} onLike={toggleLike} />
-              ))
-            )}
-          </View>
-        )}
-
-        {/* ── Contenido: TODOS ─────────────────────────────────────────────── */}
-        {!showSearch && filter === "todos" && (
-          <View>
-            {ALL_POSTS.map(post => (
-              <PostCard key={post.id} post={{ ...post, likes: post.likes + (likes[post.id] ? 1 : 0) }} onLike={toggleLike} />
-            ))}
-          </View>
-        )}
-
-        {/* ── Contenido: CONSEJOS ──────────────────────────────────────────── */}
-        {!showSearch && filter === "consejos" && (
-          <View>
-            <View style={s.secHeader}>
-              <Text style={s.secTitle}>Consejos y guías</Text>
-              <View style={[s.tagChip, { borderColor: `${PRP}55`, backgroundColor: `${PRP}18` }]}>
-                <Text style={[s.tagTxt, { color: PRP }]}>IA + usuarios</Text>
-              </View>
-            </View>
-            {TIPS.map(tip => (
-              <TipCard key={tip.id} tip={tip} />
-            ))}
-          </View>
-        )}
-
-        {/* ── Grupos para ti (siempre visible, excepto buscando) ───────────── */}
-        {!showSearch && filter !== "consejos" && (
-          <View>
-            <View style={s.secHeader}>
-              <Text style={s.secTitle}>Grupos para ti</Text>
-              <Text style={s.secAction}>Ver todos</Text>
-            </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={s.groupsRow}
-            >
+            <SecHeader title={t("community.sections.groupsForYou")} action={t("common.viewAllPlural")} />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.groupsRow}>
               {GROUPS.map(g => (
                 <TouchableOpacity key={g.name} style={s.groupCard} activeOpacity={0.85}>
-                  <LinearGradient
-                    colors={[g.hue, "#1a0e3e"]}
-                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                    style={s.groupImg}
-                  >
+                  <LinearGradient colors={[g.hue, g.hue + "55"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.groupImg}>
                     <Text style={{ fontSize: 28 }}>{g.emoji}</Text>
                   </LinearGradient>
                   <View style={{ padding: 10 }}>
                     <Text style={s.groupName} numberOfLines={2}>{g.name}</Text>
-                    <Text style={s.groupMembers}>{g.members} miembros</Text>
+                    <Text style={s.groupMembers}>{g.members} {t("community.members")}</Text>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -490,40 +402,69 @@ export default function CommunityScreen() {
           </View>
         )}
 
-        {/* ── Vista de búsqueda ────────────────────────────────────────────── */}
+        {/* ── CONSEJOS ─────────────────────────────────────────────────────── */}
+        {!showSearch && filter === "consejos" && (
+          <View>
+            <View style={[s.secHeader, { marginBottom: 14 }]}>
+              <Text style={s.secTitle}>{t("community.sections.tipsTitle")}</Text>
+              <View style={[s.tagChip, { borderColor: COLORS.accentPurple + "55", backgroundColor: COLORS.accentPurple + "18" }]}>
+                <Text style={[s.tagTxt, { color: COLORS.accentPurple }]}>{t("community.sections.tipsBadge")}</Text>
+              </View>
+            </View>
+            {TIPS.map(tip => <TipCard key={tip.id} tip={tip} />)}
+          </View>
+        )}
+
+        {/* ── TODOS ────────────────────────────────────────────────────────── */}
+        {!showSearch && filter === "todos" && (
+          <View>
+            <SecHeader title={t("community.sections.allPosts")} />
+            {withLikes(ALL_POSTS).map(post => (
+              <PostCard key={post.id} post={post} onLike={toggleLike} />
+            ))}
+            <SecHeader title={t("community.sections.groups")} action={t("common.viewAllPlural")} />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.groupsRow}>
+              {GROUPS.map(g => (
+                <TouchableOpacity key={g.name} style={s.groupCard} activeOpacity={0.85}>
+                  <LinearGradient colors={[g.hue, g.hue + "55"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.groupImg}>
+                    <Text style={{ fontSize: 28 }}>{g.emoji}</Text>
+                  </LinearGradient>
+                  <View style={{ padding: 10 }}>
+                    <Text style={s.groupName} numberOfLines={2}>{g.name}</Text>
+                    <Text style={s.groupMembers}>{g.members} {t("community.members")}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* ── MI PERFIL ────────────────────────────────────────────────────── */}
+        {!showSearch && filter === "miperfil" && (
+          <MyProfileView onLike={toggleLike} />
+        )}
+
+        {/* ── Búsqueda ─────────────────────────────────────────────────────── */}
         {showSearch && (
           <View>
             {query.trim() === "" ? (
               <View>
-                <Text style={s.searchHint}>Tendencias</Text>
+                <Text style={s.searchHint}>{t("community.search.trends")}</Text>
                 {["#GoldenRetriever", "#AdopciónBogotá", "#GatosDeApartamento", "#NutriciónCanina"].map(tag => (
                   <TouchableOpacity key={tag} style={s.trendRow} activeOpacity={0.75}>
-                    <View style={[s.trendIcon, { backgroundColor: `${MAG}22` }]}>
-                      <Ionicons name="trending-up" size={15} color={MAG} />
+                    <View style={[s.trendIcon, { backgroundColor: COLORS.accentMagenta + "22" }]}>
+                      <Ionicons name="trending-up" size={15} color={COLORS.accentMagenta} />
                     </View>
-                    <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600" }}>{tag}</Text>
-                    <Ionicons name="chevron-forward" size={16} color={COLORS.tabInactive} style={{ marginLeft: "auto" }} />
-                  </TouchableOpacity>
-                ))}
-                <Text style={[s.searchHint, { marginTop: 18 }]}>Perfiles sugeridos</Text>
-                {SUGGESTIONS.slice(0, 3).map(sug => (
-                  <TouchableOpacity key={sug.id} style={s.searchResultRow} activeOpacity={0.75}>
-                    <LinearGradient colors={[sug.hue, sug.hue + "55"]} style={s.searchResultAvatar}>
-                      <Text style={{ fontSize: 20 }}>{sug.emoji}</Text>
-                    </LinearGradient>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600" }}>{sug.name}</Text>
-                      <Text style={{ color: COLORS.textSecondary, fontSize: 12 }}>{sug.info}</Text>
-                    </View>
-                    <Text style={{ color: MAG, fontSize: 12, fontWeight: "700" }}>Seguir</Text>
+                    <Text style={{ color: COLORS.textPrimary, fontSize: 14, fontWeight: "600" }}>{tag}</Text>
+                    <Ionicons name="chevron-forward" size={16} color={COLORS.tabInactive} style={{ marginLeft: "auto" as any }} />
                   </TouchableOpacity>
                 ))}
               </View>
             ) : (
               <View style={s.emptyState}>
-                <Text style={{ fontSize: 32, marginBottom: 10 }}>🔍</Text>
-                <Text style={s.emptyTitle}>Buscando "{query}"</Text>
-                <Text style={s.emptySub}>Los resultados de búsqueda se conectarán al backend.</Text>
+                <Text style={{ fontSize: 32, marginBottom: 10 }}>{t("community.search.searchIcon")}</Text>
+                <Text style={s.emptyTitle}>{t("community.search.searchingFor", { query })}</Text>
+                <Text style={s.emptySub}>{t("community.search.backendNote")}</Text>
               </View>
             )}
           </View>
@@ -535,92 +476,56 @@ export default function CommunityScreen() {
 
 // ── Estilos ───────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  root:   { flex: 1, backgroundColor: COLORS.bgDark },
+  root:   { flex: 1, backgroundColor: COLORS.bg },
   scroll: { paddingHorizontal: 16, paddingBottom: 120 },
 
-  // Header
   header:    { flexDirection: "row", alignItems: "center", paddingTop: 6, paddingBottom: 10 },
   headerSub: { fontSize: 11, color: COLORS.tabInactive, letterSpacing: 1, textTransform: "uppercase", fontWeight: "600" },
-  headerTitle: { fontSize: 26, fontWeight: "800", color: "#fff" },
+  headerTitle: { fontSize: 26, fontWeight: "800", color: COLORS.textPrimary },
   iconBtn: {
     width: 40, height: 40, borderRadius: 99,
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.1)",
+    backgroundColor: COLORS.surfaceAlt,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
     alignItems: "center", justifyContent: "center",
   },
   notifBadge: {
     position: "absolute", top: 2, right: 2,
     minWidth: 16, height: 16, borderRadius: 8,
-    backgroundColor: "#ff6b6b", alignItems: "center", justifyContent: "center",
-    paddingHorizontal: 3,
+    backgroundColor: COLORS.badgeRed,
+    alignItems: "center", justifyContent: "center", paddingHorizontal: 3,
   },
   notifTxt: { color: "#fff", fontSize: 9, fontWeight: "800" },
 
-  // Search bar
   searchBar: {
     flexDirection: "row", alignItems: "center", gap: 10,
-    backgroundColor: "rgba(255,255,255,0.07)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.borderFaint,
     borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10,
     marginTop: 6, marginBottom: 14,
   },
-  searchInput: { flex: 1, color: "#fff", fontSize: 14 },
+  searchInput: { flex: 1, color: COLORS.textPrimary, fontSize: 14 },
 
-  // Stories
-  storiesRow: { paddingVertical: 4, marginBottom: 14 },
-  storyWrap:  { alignItems: "center", marginRight: 14 },
-  myStory: {
-    width: 60, height: 60, borderRadius: 30,
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderWidth: 2, borderColor: "rgba(255,255,255,0.15)",
-    borderStyle: "dashed",
-    alignItems: "center", justifyContent: "center",
-  },
-  storyRing: {
-    width: 64, height: 64, borderRadius: 32, padding: 2,
-    alignItems: "center", justifyContent: "center",
-  },
-  storyRingGray: {
-    width: 64, height: 64, borderRadius: 32, padding: 2,
-    alignItems: "center", justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.15)",
-  },
-  storyInner: {
-    width: "100%", height: "100%", borderRadius: 30,
-    alignItems: "center", justifyContent: "center",
-  },
-  storyName: { fontSize: 10, color: "#fff", marginTop: 5, fontWeight: "500", maxWidth: 60, textAlign: "center" },
-
-  // Filters
   filtersRow:    { paddingBottom: 14, gap: 6 },
-  filterActive:  { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 99 },
+  filterActive:  { paddingVertical: 9, paddingHorizontal: 18, borderRadius: 99 },
   filterInactive: {
-    paddingVertical: 8, paddingHorizontal: 16, borderRadius: 99,
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.12)",
+    paddingVertical: 9, paddingHorizontal: 18, borderRadius: 99,
+    backgroundColor: COLORS.surfaceAlt, borderWidth: 1, borderColor: COLORS.borderFaint,
   },
   filterTxt: { fontSize: 13, fontWeight: "600", color: COLORS.tabInactive },
 
-  // Section header
   secHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12, marginTop: 6 },
-  secTitle:  { fontSize: 16, fontWeight: "700", color: "#fff" },
-  secAction: { fontSize: 13, color: MAG, fontWeight: "600" },
+  secTitle:  { fontSize: 16, fontWeight: "700", color: COLORS.textPrimary },
+  secAction: { fontSize: 13, color: COLORS.primary, fontWeight: "600" },
 
-  // Post card
   postCard: {
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.08)",
+    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.borderFaint,
     borderRadius: 20, padding: 14, marginBottom: 14,
   },
-  postAvatar: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
-  postUser:   { fontSize: 13, fontWeight: "700", color: "#fff" },
-  postMeta:   { fontSize: 10, color: COLORS.tabInactive, marginTop: 1 },
-  postText:   { fontSize: 14, color: "#fff", lineHeight: 21, marginBottom: 10 },
-  tagChip: {
-    paddingVertical: 3, paddingHorizontal: 9, borderRadius: 99,
-    borderWidth: 1,
-  },
-  tagTxt: { fontSize: 10, fontWeight: "700" },
+  postAvatar:   { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+  postUser:     { fontSize: 13, fontWeight: "700", color: COLORS.textPrimary },
+  postMeta:     { fontSize: 10, color: COLORS.tabInactive, marginTop: 1 },
+  postText:     { fontSize: 14, color: COLORS.textPrimary, lineHeight: 21, marginBottom: 10 },
+  tagChip:      { paddingVertical: 3, paddingHorizontal: 9, borderRadius: 99, borderWidth: 1 },
+  tagTxt:       { fontSize: 10, fontWeight: "700" },
   imgBlock: {
     height: 160, borderRadius: 12, overflow: "hidden",
     justifyContent: "flex-end", padding: 8, marginBottom: 2,
@@ -629,58 +534,58 @@ const s = StyleSheet.create({
     alignSelf: "flex-start", borderRadius: 6,
     backgroundColor: "rgba(0,0,0,0.35)", paddingHorizontal: 8, paddingVertical: 3,
   },
-  postActions: { flexDirection: "row", alignItems: "center", marginTop: 10 },
-  actionBtn:   { flexDirection: "row", alignItems: "center", gap: 5, marginRight: 18 },
-  actionTxt:   { fontSize: 12, color: COLORS.tabInactive, fontWeight: "600" },
+  postActions:  { flexDirection: "row", alignItems: "center", marginTop: 10 },
+  actionBtn:    { flexDirection: "row", alignItems: "center", gap: 5, marginRight: 18 },
+  actionTxt:    { fontSize: 12, color: COLORS.tabInactive, fontWeight: "600" },
 
-  // Tip card
   tipCard: {
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.08)",
+    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.borderFaint,
     borderRadius: 18, padding: 14, marginBottom: 10,
   },
   tipIcon:     { width: 52, height: 52, borderRadius: 14, alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  tipTitle:    { fontSize: 15, fontWeight: "700", color: "#fff", marginBottom: 5, lineHeight: 20 },
+  tipTitle:    { fontSize: 15, fontWeight: "700", color: COLORS.textPrimary, marginBottom: 5, lineHeight: 20 },
   tipText:     { fontSize: 12, color: COLORS.textSecondary, lineHeight: 18, marginBottom: 6 },
   tipAuthor:   { fontSize: 11, color: COLORS.tabInactive, fontWeight: "600" },
   tipReadTime: { fontSize: 11, color: COLORS.tabInactive },
 
-  // Suggestion card
-  sugRow:  { paddingBottom: 4 },
-  sugCard: {
-    width: 140,
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.08)",
-    borderRadius: 18, padding: 14,
-    alignItems: "center", marginRight: 10,
-  },
-  sugAvatar:    { width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center", marginBottom: 8 },
-  sugName:      { fontSize: 13, fontWeight: "700", color: "#fff", textAlign: "center" },
-  sugInfo:      { fontSize: 11, color: COLORS.textSecondary, textAlign: "center", marginTop: 2 },
-  sugFollowers: { fontSize: 11, color: COLORS.tabInactive, marginTop: 2, textAlign: "center" },
-  followBtn:    { paddingVertical: 7, paddingHorizontal: 20, borderRadius: 99, alignItems: "center" },
-
-  // Groups
   groupsRow: { paddingBottom: 4 },
   groupCard: {
-    width: 170,
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.08)",
+    width: 170, backgroundColor: COLORS.card,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
     borderRadius: 18, overflow: "hidden", marginRight: 10,
   },
   groupImg:     { height: 80, alignItems: "center", justifyContent: "center" },
-  groupName:    { fontSize: 13, fontWeight: "700", color: "#fff" },
+  groupName:    { fontSize: 13, fontWeight: "700", color: COLORS.textPrimary },
   groupMembers: { fontSize: 11, color: COLORS.tabInactive, marginTop: 2 },
 
-  // Search results
-  searchHint:       { fontSize: 13, fontWeight: "700", color: COLORS.textSecondary, marginBottom: 10, letterSpacing: 0.5 },
-  trendRow:         { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.06)" },
-  trendIcon:        { width: 32, height: 32, borderRadius: 8, alignItems: "center", justifyContent: "center" },
-  searchResultRow:  { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.06)" },
-  searchResultAvatar: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+  profileCard: {
+    backgroundColor: COLORS.card, borderRadius: 22,
+    borderWidth: 1, borderColor: COLORS.borderFaint,
+    padding: 16, marginBottom: 16,
+  },
+  profileAvatar: {
+    width: 64, height: 64, borderRadius: 32,
+    alignItems: "center", justifyContent: "center",
+  },
+  profileName: { fontSize: 18, fontWeight: "800", color: COLORS.textPrimary },
+  profileBio:  { fontSize: 12, color: COLORS.textSecondary, marginTop: 2 },
+  editBtn: {
+    flexDirection: "row", alignItems: "center", gap: 5,
+    paddingVertical: 7, paddingHorizontal: 14, borderRadius: 99,
+    backgroundColor: COLORS.primaryLight,
+    borderWidth: 1, borderColor: COLORS.primary + "44",
+  },
+  statsRow:    { flexDirection: "row", alignItems: "center", marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: COLORS.borderFaint },
+  statCell:    { flex: 1, alignItems: "center" },
+  statDivider: { width: 1, height: 28, backgroundColor: COLORS.borderFaint },
+  statValue:   { fontSize: 20, fontWeight: "800", color: COLORS.textPrimary },
+  statLabel:   { fontSize: 11, color: COLORS.textSecondary, marginTop: 2, fontWeight: "600" },
 
-  // Empty state
+  searchHint:   { fontSize: 13, fontWeight: "700", color: COLORS.textSecondary, marginBottom: 10, letterSpacing: 0.5 },
+  trendRow:     { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: COLORS.borderFaint },
+  trendIcon:    { width: 32, height: 32, borderRadius: 8, alignItems: "center", justifyContent: "center" },
+
   emptyState: { alignItems: "center", paddingVertical: 48 },
-  emptyTitle: { fontSize: 17, fontWeight: "700", color: "#fff", marginBottom: 6 },
+  emptyTitle: { fontSize: 17, fontWeight: "700", color: COLORS.textPrimary, marginBottom: 6 },
   emptySub:   { fontSize: 13, color: COLORS.textSecondary, textAlign: "center", lineHeight: 20 },
 });
